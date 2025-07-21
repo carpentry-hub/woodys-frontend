@@ -7,7 +7,7 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "Biblioteca En Madera Maciza - Woody's Workshop",
+  title: "Woody's Workshop",
   description:
     "Elegante biblioteca de madera maciza con diseño minimalista y nórdico. Proyecto gratuito para construir.",
   keywords: "madera, biblioteca, DIY, woodworking, minimalista, nórdico",

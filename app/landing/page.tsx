@@ -30,9 +30,13 @@ export default function LandingPage() {
           </nav>
 
           <Link href="/landing" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-[#c1835a] rounded-full"></div>
-            <span className="text-[#c1835a] font-bold text-lg">WOODY'S</span>
-            <span className="text-[#676765] text-sm">WORKSHOP</span>
+            <Image
+              src="/woodys-workshop.png"
+              alt="Woody's Workshop Logo"
+              width={40}
+              height={40}
+              className="w-10 h-10"
+            />
           </Link>
 
           <div className="flex items-center space-x-4">
@@ -65,84 +69,6 @@ export default function LandingPage() {
           </div>
         </div>
       </header>
-
-      {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-6 py-12">
-        <div className="text-center mb-8">
-          <h1 className="text-6xl font-bold mb-4">
-            <span className="text-[#3b3535]">Crea, </span>
-            <span className="text-[#c1835a]">Construí, </span>
-            <span className="text-[#656b48]">Disfrutá</span>
-          </h1>
-          <div className="flex justify-center mb-8">
-            <div className="w-16 h-12 bg-[#c1835a] rounded-t-full rounded-b-sm transform rotate-12"></div>
-          </div>
-        </div>
-
-        {/* Hero Image with Interactive Elements */}
-        <div className="relative bg-white rounded-2xl overflow-hidden shadow-lg mb-12">
-          <div className="grid grid-cols-3 gap-0 min-h-[400px]">
-            {/* Left - Mesa pasillo */}
-            <div className="relative bg-gray-100 flex items-center justify-center">
-              <Image
-                src="/placeholder.svg?height=400&width=300"
-                alt="Mesa pasillo"
-                width={300}
-                height={400}
-                className="object-cover w-full h-full"
-              />
-              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm font-medium text-[#3b3535]">
-                Mesa pasillo
-              </div>
-              <button className="absolute bottom-4 left-4 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <div className="w-2 h-2 bg-[#c1835a] rounded-full"></div>
-              </button>
-            </div>
-
-            {/* Center - Mesa comedor */}
-            <div className="relative bg-gray-50 flex items-center justify-center">
-              <Image
-                src="/placeholder.svg?height=400&width=400"
-                alt="Mesa comedor"
-                width={400}
-                height={400}
-                className="object-cover w-full h-full"
-              />
-              <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm font-medium text-[#3b3535]">
-                Mesa comedor
-              </div>
-              <button className="absolute bottom-4 left-4 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <div className="w-2 h-2 bg-[#c1835a] rounded-full"></div>
-              </button>
-            </div>
-
-            {/* Right - Silla comedor */}
-            <div className="relative bg-gray-100 flex items-center justify-center">
-              <Image
-                src="/placeholder.svg?height=400&width=300"
-                alt="Silla comedor"
-                width={300}
-                height={400}
-                className="object-cover w-full h-full"
-              />
-              <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm font-medium text-[#3b3535]">
-                Silla comedor
-              </div>
-              <button className="absolute bottom-4 right-4 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg">
-                <div className="w-2 h-2 bg-[#c1835a] rounded-full"></div>
-              </button>
-            </div>
-          </div>
-
-          {/* Woody's Workshop Logo Overlay */}
-          <div className="absolute bottom-6 right-6">
-            <div className="flex items-center space-x-2 bg-black/80 backdrop-blur-sm rounded-lg px-4 py-2">
-              <span className="text-white font-bold text-lg">WOODY'S</span>
-              <span className="text-white/80 text-sm">WORKSHOP</span>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Mission Section */}
       <section className="max-w-7xl mx-auto px-6 py-12">

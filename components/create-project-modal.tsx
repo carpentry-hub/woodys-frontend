@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X, Plus, Check } from "lucide-react"
+import Image from "next/image"
 
 interface CreateProjectModalProps {
   isOpen: boolean
@@ -70,7 +71,14 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-2xl font-bold text-[#3b3535]">Crear un nuevo proyecto</h2>
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-8 bg-[#c1835a] rounded-t-full rounded-b-sm transform rotate-12"></div>
+                  <Image 
+                    src="/logo.png"
+                    alt="Woody's Workshop Logo"
+                    width={75}
+                    height={50}
+                    className="object-contain"
+                    priority
+                  />
                   <button onClick={onClose} className="p-2 hover:bg-white/50 rounded-full transition-colors">
                     <X className="w-5 h-5 text-[#3b3535]" />
                   </button>

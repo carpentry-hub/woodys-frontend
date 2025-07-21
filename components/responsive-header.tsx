@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Search, Bell, Menu, X, Home, FolderOpen, Heart, User } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { NotificationsDropdown } from "@/components/notifications-dropdown"
 
@@ -89,14 +90,25 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
             </div>
 
             {/* Logo - Center on mobile, left on desktop */}
-            <Link
-              href="/"
-              className="flex items-center space-x-2 lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2"
-            >
-              <div className="w-8 h-8 bg-[#c1835a] rounded-full"></div>
-              <div className="hidden sm:flex items-center space-x-1">
-                <span className="text-[#c1835a] font-bold text-lg">WOODY'S</span>
-                <span className="text-[#676765] text-sm">WORKSHOP</span>
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/logo.png"
+                alt="Woody's Workshop Logo"
+                width={55}
+                height={32}
+                className="object-contain mr-2"
+                priority
+              />
+              <div className="flex flex-col items-center justify-center">
+                <Image
+                  src="/woodys.png"
+                  alt="Woody's Workshop Text Logo"
+                  width={105}
+                  height={32}
+                  className="object-contain"
+                  priority
+                />
+                <span className="text-[#676765] text-xs sm:text-sm font-medium mt-0.5" style={{letterSpacing: '0.15em', fontFamily: 'Inter, sans-serif'}}>WORKSHOP</span>
               </div>
             </Link>
 

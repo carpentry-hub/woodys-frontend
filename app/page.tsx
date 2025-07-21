@@ -26,7 +26,13 @@ export default function LandingPage() {
               makers y construye el futuro de la carpintería sustentable.
             </p>
             <div className="flex justify-center mb-8 sm:mb-12">
-              <div className="w-16 sm:w-20 h-12 sm:h-16 bg-[#c1835a] rounded-t-full rounded-b-sm transform rotate-12"></div>
+              <Image
+                src="/logo.png"
+                alt="Woody's Workshop Logo"
+                width={200}
+                height={100}
+                priority
+              />
             </div>
           </div>
 
