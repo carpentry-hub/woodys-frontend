@@ -15,7 +15,7 @@ export default function LandingPage() {
       <ResponsiveHeader />
 
       {/* Hero Section */}
-      <section className="px-4 sm:px-6 py-8 sm:py-16">
+      <section className="px-4 sm:px-6 py-8 sm:py-16 z-1 relative">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8 sm:mb-12">
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6">
@@ -24,8 +24,8 @@ export default function LandingPage() {
               <span className="text-[#656b48]">Disfrutá</span>
             </h1>
             <p className="text-lg sm:text-xl text-[#676765] mb-6 sm:mb-8 max-w-3xl mx-auto px-4">
-              Únete a la comunidad de carpinteros más grande de Latinoamérica. Comparte tus proyectos, aprende de otros
-              makers y construye el futuro de la carpintería sustentable.
+              Unite a la comunidad de carpinteros más grande. Compartí tus proyectos, aprendé de otros
+              y construí el futuro de la carpintería.
             </p>
             <div className="flex justify-center mb-8 sm:mb-12">
               <Image

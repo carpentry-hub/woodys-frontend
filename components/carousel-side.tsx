@@ -13,17 +13,17 @@ const images = [
 ]
 
 const rows = 3
-const imageSize = 130
+const imageSize = 100
 const gapPx = 16
 
 function getRowImages() {
-  const doubled = [...images, ...images]
-  const imagesPerRow = Math.ceil(doubled.length / rows)
+  const tripled = [...images, ...images, ...images]
+  const imagesPerRow = Math.ceil(tripled.length / rows)
   const result = []
   for (let i = 0; i < rows; i++) {
     const start = i * imagesPerRow
     const end = start + imagesPerRow
-    result.push(doubled.slice(start, end))
+    result.push(tripled.slice(start, end))
   }
   return result
 }
@@ -36,19 +36,20 @@ export default function CarouselSide() {
     <>
       {/* Carrusel izquierdo */}
       <div
-        className="hidden md:flex flex-col absolute top-0 bottom-0 left-0 w-[400px] h-[60%] overflow-hidden z-10 pointer-events-auto"
-        style={{ padding: gapPx / 2, backgroundColor: "transparent" }}
+        className="hidden md:flex flex-col absolute top-0 bottom-0 left-0 w-[22%] h-[60%] overflow-hidden pointer-events-none"
+        style={{ padding: gapPx / 2 }}
       >
-        {/* Contenido de imágenes */}
         {leftRows.map((rowImages, i) => (
           <div
             key={`left-row-${i}`}
             className={`flex flex-row gap-4 whitespace-nowrap ${
-              i === 1 ? "animate-carousel-right" : "animate-carousel-left"
+              i % 2 === 0 ? "animate-carousel-left" : "animate-carousel-right"
             }`}
             style={{
-              width: "200%",
+              width: "240%",
               marginBottom: gapPx / 2,
+              animationDuration: "15s",
+              willChange: "transform",
             }}
           >
             {rowImages.map((src, j) => (
@@ -64,10 +65,8 @@ export default function CarouselSide() {
             ))}
           </div>
         ))}
-
-        {/* Difuminado en el borde derecho */}
         <div
-        style={{
+          style={{
             position: "absolute",
             top: 0,
             right: 0,
@@ -75,24 +74,26 @@ export default function CarouselSide() {
             height: "100%",
             pointerEvents: "none",
             background: "linear-gradient(to left, rgba(243,240,235,1), rgba(243,240,235,0))",
-        }}
+          }}
         />
       </div>
 
       {/* Carrusel derecho */}
       <div
-        className="hidden md:flex flex-col absolute top-0 bottom-0 right-0 w-[400px] h-[60%] overflow-hidden z-10 pointer-events-auto"
-        style={{ padding: gapPx / 2, backgroundColor: "transparent" }}
+        className="hidden md:flex flex-col absolute top-0 bottom-0 right-0 w-[22%] h-[60%] overflow-hidden pointer-events-none"
+        style={{ padding: gapPx / 2 }}
       >
         {rightRows.map((rowImages, i) => (
           <div
             key={`right-row-${i}`}
             className={`flex flex-row gap-4 whitespace-nowrap ${
-              i === 1 ? "animate-carousel-left" : "animate-carousel-right"
+              i % 2 === 0 ? "animate-carousel-right" : "animate-carousel-left"
             }`}
             style={{
-              width: "200%",
+              width: "240%",
               marginBottom: gapPx / 2,
+              animationDuration: "15s",
+              willChange: "transform",
             }}
           >
             {rowImages.map((src, j) => (
@@ -108,10 +109,8 @@ export default function CarouselSide() {
             ))}
           </div>
         ))}
-
-        {/* Difuminado en el borde izquierdo */}
         <div
-        style={{
+          style={{
             position: "absolute",
             top: 0,
             left: 0,
@@ -119,7 +118,7 @@ export default function CarouselSide() {
             height: "100%",
             pointerEvents: "none",
             background: "linear-gradient(to right, rgba(243,240,235,1), rgba(243,240,235,0))",
-        }}
+          }}
         />
       </div>
     </>
