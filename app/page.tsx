@@ -6,10 +6,12 @@ import { Plus, Users, Award, TrendingUp, Heart, ArrowRight, Star } from "lucide-
 import Link from "next/link"
 import Image from "next/image"
 import { ResponsiveHeader } from "@/components/responsive-header"
+import CarouselSide from "@/components/carousel-side"
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#f2f0eb]">
+      <CarouselSide />
       <ResponsiveHeader />
 
       {/* Hero Section */}

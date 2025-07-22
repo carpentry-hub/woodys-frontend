@@ -105,3 +105,28 @@ html, body, * {
     @apply bg-background text-foreground;
   }
 }
+@keyframes carousel-left {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes carousel-right {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-carousel-left {
+  animation: carousel-left 20s linear infinite;
+}
+
+.animate-carousel-right {
+  animation: carousel-right 20s linear infinite;
+}

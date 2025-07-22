@@ -11,7 +11,8 @@ export const metadata: Metadata = {
   description:
     "Elegante biblioteca de madera maciza con diseño minimalista y nórdico. Proyecto gratuito para construir.",
   keywords: "madera, biblioteca, DIY, woodworking, minimalista, nórdico",
-    generator: 'v0.dev'
+    generator: 'v0.dev',
+    icons: {icon: "/logo.ico"}
 }
 
 export default function RootLayout({

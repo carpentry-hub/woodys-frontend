@@ -270,7 +270,7 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
           {/* Footer */}
           <div className="mt-8 pt-6 border-t border-[#f6f6f6] text-center">
             <p className="text-xs text-[#676765]">
-              © 2024 Woody's Workshop
+              © 2025 Woody's Workshop
               <br />
               Hecho con ❤️ para makers
             </p>
