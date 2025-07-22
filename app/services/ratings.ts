@@ -1,8 +1,10 @@
 // Ratings Services
+
+import { API_BASE_URL } from './api-routes';
 import { Rating } from '../../models/rating';
 
 export async function rateProject(id: number, data: Rating) {
-  const res = await fetch(`https://api.carpinteria.com/v1/projects/${id}/ratings`, {
+  const res = await fetch(`${API_BASE_URL}/projects/${id}/ratings`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -12,7 +14,7 @@ export async function rateProject(id: number, data: Rating) {
 }
 
 export async function updateRating(id: number, data: Rating) {
-  const res = await fetch(`https://api.carpinteria.com/v1/projects/${id}/ratings`, {
+  const res = await fetch(`${API_BASE_URL}/projects/${id}/ratings`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
