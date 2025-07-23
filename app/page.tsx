@@ -5,10 +5,14 @@ import { Badge } from "@/components/ui/badge"
 import { Plus, Users, Award, TrendingUp, Heart, ArrowRight, Star } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+
 import { ResponsiveHeader } from "@/components/responsive-header"
 import CarouselSide from "@/components/carousel-side"
+import { useAuth } from "../hooks/useAuth"
 
 export default function LandingPage() {
+  const { user, loading, loginWithGoogle, logout } = useAuth();
+
   return (
     <div className="min-h-screen bg-[#f2f0eb]">
       <CarouselSide />
