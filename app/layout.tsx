@@ -4,6 +4,8 @@ import { Inter } from "next/font/google"
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import "./globals.css"
 
+<SpeedInsights/>
+
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {

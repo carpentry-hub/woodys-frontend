@@ -9,9 +9,17 @@ import Image from "next/image"
 import { ResponsiveHeader } from "@/components/responsive-header"
 import CarouselSide from "@/components/carousel-side"
 import { useAuth } from "../hooks/useAuth"
+import { motion } from "framer-motion"
+import { useInView } from "react-intersection-observer"
 
 export default function LandingPage() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
+
+  // Animation hooks for each section
+  const [heroRef, heroInView] = useInView({ triggerOnce: true, threshold: 0.2 });
+  const [statsRef, statsInView] = useInView({ triggerOnce: true, threshold: 0.2 });
+  const [whyRef, whyInView] = useInView({ triggerOnce: true, threshold: 0.2 });
+  const [creatorsRef, creatorsInView] = useInView({ triggerOnce: true, threshold: 0.2 });
 
   return (
     <div className="min-h-screen bg-[#f2f0eb]">
@@ -19,7 +27,13 @@ export default function LandingPage() {
       <ResponsiveHeader />
 
       {/* Hero Section */}
-      <section className="px-4 sm:px-6 py-8 sm:py-16 z-1 relative">
+      <motion.section
+        ref={heroRef}
+        initial={{ opacity: 0, y: 40 }}
+        animate={heroInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="px-4 sm:px-6 py-8 sm:py-16 z-1 relative"
+      >
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-8 sm:mb-12">
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6">
@@ -62,7 +76,13 @@ export default function LandingPage() {
           </div>
 
           {/* Community Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mb-12 sm:mb-16 px-4">
+          <motion.div
+            ref={statsRef}
+            initial={{ opacity: 0, y: 40 }}
+            animate={statsInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, delay: 0.1, ease: "easeOut" }}
+            className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mb-12 sm:mb-16 px-4"
+          >
             <div className="text-center bg-white rounded-lg p-4 sm:p-6 shadow-sm">
               <div className="text-2xl sm:text-4xl font-bold text-[#c1835a] mb-1 sm:mb-2">12.5K+</div>
               <div className="text-sm sm:text-base text-[#676765]">Proyectos</div>
@@ -79,7 +99,7 @@ export default function LandingPage() {
               <div className="text-2xl sm:text-4xl font-bold text-[#c1835a] mb-1 sm:mb-2">98%</div>
               <div className="text-sm sm:text-base text-[#676765]">Satisfacción</div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Hero Image with Interactive Elements */}
           <div className="relative bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-xl mb-12 sm:mb-16 mx-4 sm:mx-0">
@@ -145,10 +165,16 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Why Publish Section */}
-      <section className="bg-white py-12 sm:py-16">
+      <motion.section
+        ref={whyRef}
+        initial={{ opacity: 0, y: 40 }}
+        animate={whyInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="bg-white py-12 sm:py-16"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-[#3b3535] mb-4">¿Por qué publicar tus proyectos?</h2>
@@ -198,10 +224,16 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Featured Creators Section */}
-      <section className="py-12 sm:py-16">
+      <motion.section
+        ref={creatorsRef}
+        initial={{ opacity: 0, y: 40 }}
+        animate={creatorsInView ? { opacity: 1, y: 0 } : {}}
+        transition={{ duration: 0.7, ease: "easeOut" }}
+        className="py-12 sm:py-16"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-8 sm:mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-[#3b3535] mb-4">Creadores destacados del mes</h2>
@@ -251,7 +283,7 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       {/* Projects Sections */}
       {["Estilo japandi", "Estilo vintage"].map((sectionTitle, sectionIndex) => (
