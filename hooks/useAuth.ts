@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { User, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { User, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
 export function useAuth() {
@@ -13,6 +13,33 @@ export function useAuth() {
       setLoading(false);
     });
     return () => unsubscribe();
+  }, []);
+
+
+  const loginWithEmail = useCallback(async (email: string, password: string) => {
+    setError(null);
+    setLoading(true);
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const registerWithEmail = useCallback(async (email: string, password: string) => {
+    setError(null);
+    setLoading(true);
+    try {
+      await createUserWithEmailAndPassword(auth, email, password);
+    } catch (err: any) {
+      setError(err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -52,5 +79,5 @@ export function useAuth() {
     }
   }, []);
 
-  return { user, loading, error, login, loginWithGoogle, logout };
+  return { user, loading, error, login, loginWithGoogle, logout, loginWithEmail, registerWithEmail };
 }

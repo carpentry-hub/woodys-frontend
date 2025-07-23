@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { AnimatePresence, motion } from "framer-motion"
 import { useAuth } from "../hooks/useAuth"
+import LoginModal from "@/components/login-modal"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Search, Bell, Menu, X, Home, FolderOpen, Heart, User, ChevronDown } from "lucide-react"
@@ -60,7 +61,8 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
     setIsMenuOpen(false)
   }
 
-  const { user, loading, loginWithGoogle, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const protectedRoutes = ["/my-projects", "/my-favorites", "/profile"];
   const handleLogout = () => {
@@ -74,7 +76,14 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
   return (
     <>
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 bg-[#ffffff] border-b border-[#f6f6f6] z-50 shadow-sm">
+      <header
+        className="fixed top-0 left-0 right-0 z-50 border-b border-[#f6f6f6] shadow-sm"
+        style={{
+          background: 'rgba(255,255,255,0.67)',
+          backdropFilter: 'blur(14.2px)',
+          WebkitBackdropFilter: 'blur(14.2px)',
+        }}
+      >
         <div className="px-4 sm:px-6 py-3 sm:py-4 relative">
           <div className="flex items-center justify-between">
             {/* Mobile Menu Button & Navigation */}
@@ -103,7 +112,7 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                       onClick={closeMenu}
                       className={`font-medium transition-colors ${
                         item.active
-                          ? "text-[#000000] border-b-2 border-[#000000] pb-1"
+                          ? "text-[#c1835a] border-b-2 border-[#c1835a] pb-1"
                           : "text-[#adadad] hover:text-[#3d3d3d]"
                       }`}
                     >
@@ -205,9 +214,14 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                   )}
                 </div>
               ) : (
-                <Button onClick={loginWithGoogle} className="hidden sm:flex bg-[#c1835a] text-white items-center px-4 py-2 rounded-lg">
-                  Iniciar sesión
-                </Button>
+                <>
+                  <Button onClick={() => setLoginModalOpen(true)} className="hidden sm:flex bg-[#c1835a] text-white items-center px-4 py-2 rounded-lg">
+                    Iniciar sesión
+                  </Button>
+                  {loginModalOpen && (
+                    <LoginModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+                  )}
+                </>
               )}
 
               {/* Profile - Mobile */}
@@ -297,9 +311,12 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                 )}
               </div>
             ) : (
-              <Button onClick={loginWithGoogle} className="w-full bg-[#c1835a] text-white items-center px-4 py-2 rounded-lg">
-                Iniciar sesión
-              </Button>
+               <>
+                  <Button onClick={() => setLoginModalOpen(true)} className="hidden sm:flex bg-[#c1835a] text-white items-center px-4 py-2 rounded-lg">
+                    Iniciar sesión
+                  </Button>
+                  <LoginModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
+                </>
             )}
           </div>
 

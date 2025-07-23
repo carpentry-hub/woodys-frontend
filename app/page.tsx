@@ -103,65 +103,46 @@ export default function LandingPage() {
 
           {/* Hero Image with Interactive Elements */}
           <div className="relative bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-xl mb-12 sm:mb-16 mx-4 sm:mx-0">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-0 min-h-[300px] sm:min-h-[400px]">
-              {/* Left - Mesa pasillo */}
-              <div className="relative bg-gray-100 flex items-center justify-center">
-                <Image
-                  src="/placeholder.svg?height=400&width=300"
-                  alt="Mesa pasillo"
-                  width={300}
-                  height={400}
-                  className="object-cover w-full h-full"
-                />
-                <div className="absolute top-3 sm:top-4 left-3 sm:left-4 bg-white/90 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-medium text-[#3b3535]">
-                  Mesa pasillo
-                </div>
-                <button className="absolute bottom-3 sm:bottom-4 left-3 sm:left-4 w-6 sm:w-8 h-6 sm:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-                  <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-[#c1835a] rounded-full"></div>
-                </button>
-              </div>
-
-              {/* Center - Mesa comedor (hidden on mobile) */}
-              <div className="hidden sm:block relative bg-gray-50 flex items-center justify-center">
-                <Image
-                  src="/placeholder.svg?height=400&width=400"
-                  alt="Mesa comedor"
-                  width={400}
-                  height={400}
-                  className="object-cover w-full h-full"
-                />
-                <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm rounded-lg px-3 py-2 text-sm font-medium text-[#3b3535]">
-                  Mesa comedor
-                </div>
-                <button className="absolute bottom-4 left-4 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-                  <div className="w-2 h-2 bg-[#c1835a] rounded-full"></div>
-                </button>
-              </div>
-
-              {/* Right - Silla comedor */}
-              <div className="relative bg-gray-100 flex items-center justify-center">
-                <Image
-                  src="/placeholder.svg?height=400&width=300"
-                  alt="Silla comedor"
-                  width={300}
-                  height={400}
-                  className="object-cover w-full h-full"
-                />
-                <div className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-white/90 backdrop-blur-sm rounded-lg px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-medium text-[#3b3535]">
-                  Silla comedor
-                </div>
-                <button className="absolute bottom-3 sm:bottom-4 right-3 sm:right-4 w-6 sm:w-8 h-6 sm:h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-                  <div className="w-1.5 sm:w-2 h-1.5 sm:h-2 bg-[#c1835a] rounded-full"></div>
-                </button>
-              </div>
+            {/* Imagen principal */}
+            <div className="relative w-full aspect-[3/1] max-h-[360px] overflow-hidden">
+              <Image
+                src="/landing/landing.png"
+                alt="Ambiente de comedor de madera"
+                fill
+                className="object-cover w-full h-full"
+                priority
+              />
             </div>
-
-            {/* Woody's Workshop Logo Overlay */}
-            <div className="absolute bottom-4 sm:bottom-6 right-4 sm:right-6">
-              <div className="flex items-center space-x-1 sm:space-x-2 bg-black/80 backdrop-blur-sm rounded-lg px-2 sm:px-4 py-1 sm:py-2">
-                <span className="text-white font-bold text-sm sm:text-lg">WOODY'S</span>
-                <span className="text-white/80 text-xs sm:text-sm">WORKSHOP</span>
+            {/* Hotspots interactivos */}
+            {/* Mesa pasillo */}
+            <div className="absolute left-[7%] top-[60%] flex flex-col items-center group">
+              <div className="mb-2 px-3 py-1 rounded-full bg-white/70 backdrop-blur-sm text-xs text-[#3b3535] font-medium shadow transition-all group-hover:bg-[#c1835a] group-hover:text-white">
+                Mesa pasillo
               </div>
+              <div className="w-0.5 h-8 bg-white/60 group-hover:bg-[#c1835a]" />
+              <button className="w-8 h-8 bg-white/80 border-2 border-white shadow-lg rounded-full flex items-center justify-center transition-all group-hover:bg-[#c1835a] group-hover:border-[#c1835a]">
+                <div className="w-3 h-3 bg-[#c1835a] rounded-full group-hover:bg-white transition-all"></div>
+              </button>
+            </div>
+            {/* Mesa comedor */}
+            <div className="absolute left-1/2 top-[32%] flex flex-col items-center group" style={{transform:'translateX(-50%)'}}>
+              <div className="mb-2 px-3 py-1 rounded-full bg-white/70 backdrop-blur-sm text-xs text-[#3b3535] font-medium shadow transition-all group-hover:bg-[#c1835a] group-hover:text-white">
+                Mesa comedor
+              </div>
+              <div className="w-0.5 h-12 bg-white/60 group-hover:bg-[#c1835a]" />
+              <button className="w-8 h-8 bg-white/80 border-2 border-white shadow-lg rounded-full flex items-center justify-center transition-all group-hover:bg-[#c1835a] group-hover:border-[#c1835a]">
+                <div className="w-3 h-3 bg-[#c1835a] rounded-full group-hover:bg-white transition-all"></div>
+              </button>
+            </div>
+            {/* Silla cómoda */}
+            <div className="absolute right-[22%] top-[60%] flex flex-col items-center group">
+              <div className="mb-2 px-3 py-1 rounded-full bg-white/70 backdrop-blur-sm text-xs text-[#3b3535] font-medium shadow transition-all group-hover:bg-[#c1835a] group-hover:text-white">
+                Silla cómoda
+              </div>
+              <div className="w-0.5 h-8 bg-white/60 group-hover:bg-[#c1835a]" />
+              <button className="w-8 h-8 bg-white/80 border-2 border-white shadow-lg rounded-full flex items-center justify-center transition-all group-hover:bg-[#c1835a] group-hover:border-[#c1835a]">
+                <div className="w-3 h-3 bg-[#c1835a] rounded-full group-hover:bg-white transition-all"></div>
+              </button>
             </div>
           </div>
         </div>
