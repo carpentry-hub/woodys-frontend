@@ -42,8 +42,7 @@ export function useAuth() {
         username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
         email: firebaseUser.email || '',
         phone_number: firebaseUser.phoneNumber || '',
-        profile_picture: 0, // Puedes ajustar esto según tu lógica
-        reputation: 0,
+        profile_picture: 1
       };
       await createUserInDB(userData as Omit<AppUser, 'password'>);
     } catch (err: any) {
@@ -71,7 +70,22 @@ export function useAuth() {
     setLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      const cred = await signInWithPopup(auth, provider);
+      const firebaseUser = cred.user;
+      // Verificar si el usuario ya existe en la base de datos
+      try {
+        // Suponiendo que el email es único
+        // Si tu API usa otro identificador, ajusta aquí
+        // Si el usuario no existe, lanzará error y lo creamos
+        await createUserInDB({
+          username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
+          email: firebaseUser.email || '',
+          phone_number: firebaseUser.phoneNumber || '',
+          profile_picture: 1
+        });
+      } catch (e) {
+        // Si el usuario ya existe, ignoramos el error
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
