@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { User, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../lib/firebase';
+import { createUserInDB } from '../app/services/users';
+import type { User as AppUser } from '../models/user';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -33,7 +35,17 @@ export function useAuth() {
     setError(null);
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      // Crear usuario en la base de datos del proyecto
+      const firebaseUser = cred.user;
+      const userData: Partial<AppUser> = {
+        username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
+        email: firebaseUser.email || '',
+        phone_number: firebaseUser.phoneNumber || '',
+        profile_picture: 0, // Puedes ajustar esto según tu lógica
+        reputation: 0,
+      };
+      await createUserInDB(userData as Omit<AppUser, 'password'>);
     } catch (err: any) {
       setError(err.message);
       throw err;

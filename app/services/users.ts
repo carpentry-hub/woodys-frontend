@@ -6,6 +6,21 @@ import { User } from '../../models/user';
 import { Project } from '../../models/project';
 import { ProjectList } from '../../models/project-list';
 
+// Crear usuario en la base de datos del proyecto (sin contraseña)
+export async function createUserInDB(userData: Omit<User, 'password'>) {
+  const headers = await getIdTokenHeader();
+  const res = await fetch(`${API_BASE_URL}/users`, {
+    method: 'POST',
+    headers: {
+      ...headers,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userData),
+  });
+  if (!res.ok) throw new Error('Error creando usuario en la base de datos');
+  return res.json();
+}
+
 export async function getUser(id: number) {
   const headers = await getIdTokenHeader();
   const res = await fetch(`${API_BASE_URL}/users/${id}`, { headers });
