@@ -6,54 +6,62 @@ import { Edit, MapPin, Calendar, Star, Users, Folder } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { ResponsiveHeader } from "@/components/responsive-header"
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../../hooks/useAuth";
+import { getUser } from "../services/users";
 import ProfilePictureSelector from "@/components/profile-picture-selector";
 
-const userStats = {
-  projectsPublished: 24,
-  followers: 1205,
-  following: 89,
-  totalLikes: 3420,
-  reputation: 4.99,
-}
+// Estado para los datos reales del usuario
+const initialStats = {
+  projectsPublished: 0,
+  followers: 0,
+  following: 0,
+  totalLikes: 0,
+  reputation: 0,
+};
 
-const recentProjects = [
-  {
-    id: 1,
-    title: "Biblioteca En Madera Maciza",
-    image: "/placeholder.svg?height=200&width=200",
-    rating: 4.99,
-    likes: 209,
-    category: "Bibliotecas",
-  },
-  {
-    id: 2,
-    title: "Mesa Comedor Nórdica",
-    image: "/placeholder.svg?height=200&width=200",
-    rating: 4.85,
-    likes: 156,
-    category: "Mesas",
-  },
-  {
-    id: 3,
-    title: "Silla Minimalista",
-    image: "/placeholder.svg?height=200&width=200",
-    rating: 4.72,
-    likes: 98,
-    category: "Sillas",
-  },
-]
+import { getUserProjects } from "../services/users";
 
-const achievements = [
-  { name: "Carpintero Experto", icon: "🏆", description: "Más de 20 proyectos publicados" },
-  { name: "Mentor Comunitario", icon: "👨‍🏫", description: "Ayudó a más de 100 usuarios" },
-  { name: "Innovador", icon: "💡", description: "Primer proyecto en tendencia" },
-]
+
+
 
 export default function ProfilePage() {
+  const { user, loading } = useAuth();
   const [profilePicture, setProfilePicture] = useState<string>("/placeholder.svg?height=96&width=96");
   const [showSelector, setShowSelector] = useState(false);
-  // ...existing code...
+  const [userData, setUserData] = useState<any>(null);
+  const [userStats, setUserStats] = useState(initialStats);
+  const [projects, setProjects] = useState<any[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user && user.uid) {
+      getUser(Number(user.uid))
+        .then(data => {
+          setUserData(data);
+          setProfilePicture(data.profile_picture_url || "/placeholder.svg?height=96&width=96");
+          setUserStats({
+            projectsPublished: data.projects_count || 0,
+            followers: data.followers_count || 0,
+            following: data.following_count || 0,
+            totalLikes: data.total_likes || 0,
+            reputation: data.reputation || 0,
+          });
+        })
+        .catch(() => {});
+
+      setProjectsLoading(true);
+      getUserProjects(Number(user.uid))
+        .then(data => {
+          setProjects(data);
+        })
+        .catch(() => {
+          setProjects([]);
+        })
+        .finally(() => setProjectsLoading(false));
+    }
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-[#f2f0eb]">
       {/* Header */}
@@ -70,20 +78,19 @@ export default function ProfilePage() {
                   <AvatarFallback className="text-2xl">PV</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h1 className="text-3xl font-bold text-[#3b3535] mb-2">Priscila Della Vecchia</h1>
+                  <h1 className="text-3xl font-bold text-[#3b3535] mb-2">{userData?.username || user?.displayName || user?.email || "Usuario"}</h1>
                   <div className="flex items-center space-x-4 text-[#676765] mb-3">
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-4 h-4" />
-                      <span className="text-sm">Buenos Aires, Argentina</span>
+                      <span className="text-sm">{userData?.location || "Sin ubicación"}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
-                      <span className="text-sm">Se unió en marzo 2023</span>
+                      <span className="text-sm">Se unió en {userData?.created_at ? new Date(userData.created_at).toLocaleDateString() : "-"}</span>
                     </div>
                   </div>
                   <p className="text-[#3b3535] max-w-2xl">
-                    Apasionada por la carpintería y el diseño sustentable. Me especializo en muebles minimalistas y
-                    nórdicos usando madera maciza. Comparto mis proyectos para inspirar a otros makers.
+                    {userData?.bio || "Sin descripción."}
                   </p>
                   <Button className="mt-4 bg-[#c1835a] text-white rounded-full" onClick={() => setShowSelector(true)}>
                     Cambiar foto de perfil
@@ -144,34 +151,40 @@ export default function ProfilePage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Recent Projects */}
+              {/* Proyectos del usuario */}
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h2 className="text-xl font-semibold text-[#3b3535] mb-6">Proyectos recientes</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recentProjects.map((project) => (
-                    <div key={project.id} className="group cursor-pointer">
-                      <div className="aspect-square bg-[#f6f6f6] rounded-lg overflow-hidden mb-3">
-                        <Image
-                          src={project.image || "/placeholder.svg"}
-                          alt={project.title}
-                          width={200}
-                          height={200}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        />
-                      </div>
-                      <h3 className="font-medium text-[#3b3535] text-sm mb-1">{project.title}</h3>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-1">
-                          <Star className="w-3 h-3 fill-[#c1835a] text-[#c1835a]" />
-                          <span className="text-xs text-[#676765]">{project.rating}</span>
+                {projectsLoading ? (
+                  <div className="text-center text-[#676765]">Cargando proyectos...</div>
+                ) : projects.length === 0 ? (
+                  <div className="text-center text-[#676765]">Aún no tiene proyectos publicados.</div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {projects.map((project) => (
+                      <div key={project.id} className="group cursor-pointer">
+                        <div className="aspect-square bg-[#f6f6f6] rounded-lg overflow-hidden mb-3">
+                          <Image
+                            src={project.image_url || "/placeholder.svg"}
+                            alt={project.title}
+                            width={200}
+                            height={200}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
                         </div>
-                        <Badge variant="secondary" className="bg-[#f3f0eb] text-[#c89c6b] text-xs">
-                          {project.category}
-                        </Badge>
+                        <h3 className="font-medium text-[#3b3535] text-sm mb-1">{project.title}</h3>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-1">
+                            <Star className="w-3 h-3 fill-[#c1835a] text-[#c1835a]" />
+                            <span className="text-xs text-[#676765]">{project.rating || "-"}</span>
+                          </div>
+                          <Badge variant="secondary" className="bg-[#f3f0eb] text-[#c89c6b] text-xs">
+                            {project.category || "Sin categoría"}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
                 <div className="text-center mt-6">
                   <Link href="/my-projects" className="text-[#c1835a] font-medium hover:underline">
                     Ver todos los proyectos
@@ -179,21 +192,7 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              {/* Achievements */}
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-[#3b3535] mb-6">Logros</h2>
-                <div className="space-y-4">
-                  {achievements.map((achievement, index) => (
-                    <div key={index} className="flex items-center space-x-4 p-3 bg-[#f6f6f6] rounded-lg">
-                      <div className="text-2xl">{achievement.icon}</div>
-                      <div>
-                        <h3 className="font-medium text-[#3b3535]">{achievement.name}</h3>
-                        <p className="text-sm text-[#676765]">{achievement.description}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              {/* Achievements eliminados, solo datos del backend */}
             </div>
 
             {/* Sidebar */}
