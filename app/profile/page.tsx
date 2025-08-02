@@ -1,3 +1,4 @@
+"use client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -5,6 +6,8 @@ import { Edit, MapPin, Calendar, Star, Users, Folder } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { ResponsiveHeader } from "@/components/responsive-header"
+import { useState } from "react";
+import ProfilePictureSelector from "@/components/profile-picture-selector";
 
 const userStats = {
   projectsPublished: 24,
@@ -48,6 +51,9 @@ const achievements = [
 ]
 
 export default function ProfilePage() {
+  const [profilePicture, setProfilePicture] = useState<string>("/placeholder.svg?height=96&width=96");
+  const [showSelector, setShowSelector] = useState(false);
+  // ...existing code...
   return (
     <div className="min-h-screen bg-[#f2f0eb]">
       {/* Header */}
@@ -60,10 +66,9 @@ export default function ProfilePage() {
             <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
               <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 w-full">
                 <Avatar className="w-20 sm:w-24 h-20 sm:h-24">
-                  <AvatarImage src="/placeholder.svg?height=96&width=96" />
+                  <AvatarImage src={profilePicture} />
                   <AvatarFallback className="text-2xl">PV</AvatarFallback>
                 </Avatar>
-
                 <div>
                   <h1 className="text-3xl font-bold text-[#3b3535] mb-2">Priscila Della Vecchia</h1>
                   <div className="flex items-center space-x-4 text-[#676765] mb-3">
@@ -80,9 +85,28 @@ export default function ProfilePage() {
                     Apasionada por la carpintería y el diseño sustentable. Me especializo en muebles minimalistas y
                     nórdicos usando madera maciza. Comparto mis proyectos para inspirar a otros makers.
                   </p>
+                  <Button className="mt-4 bg-[#c1835a] text-white rounded-full" onClick={() => setShowSelector(true)}>
+                    Cambiar foto de perfil
+                  </Button>
+                  {showSelector && (
+                    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                      <div className="bg-white rounded-2xl p-8 shadow-2xl">
+                        <h3 className="text-lg font-bold mb-4 text-[#3b3535]">Selecciona tu foto de perfil</h3>
+                        <ProfilePictureSelector
+                          currentPicture={profilePicture}
+                          onSelect={url => {
+                            setProfilePicture(url);
+                            setShowSelector(false);
+                          }}
+                        />
+                        <Button className="mt-4" variant="outline" onClick={() => setShowSelector(false)}>
+                          Cancelar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-
               <Button className="bg-[#656b48] hover:bg-[#3b3535] text-white flex items-center space-x-2">
                 <Edit className="w-4 h-4" />
                 <span>Editar perfil</span>
