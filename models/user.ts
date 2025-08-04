@@ -5,5 +5,6 @@ export interface User {
   phone_number?: string;
   reputation?: number;
   profile_picture?: number;
-  create_at?: string;
+  created_at?: string;
+  firebase_uid: string;
 }

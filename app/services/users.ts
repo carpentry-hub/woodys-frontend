@@ -58,6 +58,9 @@ export async function getUserProjects(id: number) {
   console.log('[getUserProjects] Respuesta del servidor:', res.status);
 
   if (!res.ok) {
+    if (res.status === 404) {
+      return [];
+    }
     const errorText = await res.text();
     console.error('[getUserProjects] Error:', errorText);
     throw new Error('Error obteniendo proyectos del usuario');
@@ -79,6 +82,11 @@ export async function getUserProjectLists(id: number) {
   if (!res.ok) {
     const errorText = await res.text();
     console.error('[getUserProjectLists] Error:', errorText);
+
+    if (res.status === 404) {
+      return [];
+    }
+
     throw new Error('Error obteniendo listas públicas del usuario');
   }
 
@@ -86,3 +94,23 @@ export async function getUserProjectLists(id: number) {
   console.log('[getUserProjectLists] Listas públicas obtenidas:', data);
   return data;
 }
+
+
+export async function getUserByFirebaseUid(uid: string) {
+  const headers = await getIdTokenHeader();
+  console.log(`[getUserByFirebaseUid] Buscando usuario con UID ${uid}`);
+
+  const res = await fetch(`${API_BASE_URL}/users/uid/${uid}`, { headers });
+
+  console.log('[getUserByFirebaseUid] Respuesta del servidor:', res.status);
+
+  if (!res.ok) {
+    console.error('[getUserByFirebaseUid] Usuario no encontrado');
+    throw new Error('Usuario no encontrado');
+  }
+
+  const data = await res.json();
+  console.log('[getUserByFirebaseUid] Usuario obtenido:', data);
+  return data;
+}
+

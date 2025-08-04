@@ -81,7 +81,8 @@ export function useAuth() {
           username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || '',
           email: firebaseUser.email || '',
           phone_number: firebaseUser.phoneNumber || '',
-          profile_picture: 1
+          profile_picture: 1,
+          firebase_uid: firebaseUser.uid,
         });
       } catch (e) {
         // Si el usuario ya existe, ignoramos el error

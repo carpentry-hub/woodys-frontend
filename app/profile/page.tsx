@@ -1,17 +1,17 @@
 "use client";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Edit, MapPin, Calendar, Star, Users, Folder } from "lucide-react"
-import Link from "next/link"
-import Image from "next/image"
-import { ResponsiveHeader } from "@/components/responsive-header"
+
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Edit, MapPin, Calendar, Star } from "lucide-react";
+import { ResponsiveHeader } from "@/components/responsive-header";
 import { useAuth } from "../../hooks/useAuth";
-import { getUser } from "../services/users";
+import { getUserByFirebaseUid, getUser, getUserProjects } from "../services/users";
 import ProfilePictureSelector from "@/components/profile-picture-selector";
 
-// Estado para los datos reales del usuario
 const initialStats = {
   projectsPublished: 0,
   followers: 0,
@@ -20,14 +20,9 @@ const initialStats = {
   reputation: 0,
 };
 
-import { getUserProjects } from "../services/users";
-
-
-
-
 export default function ProfilePage() {
-  const { user, loading } = useAuth();
-  const [profilePicture, setProfilePicture] = useState<string>("/placeholder.svg?height=96&width=96");
+  const { user } = useAuth();
+  const [profilePicture, setProfilePicture] = useState("/placeholder.svg?height=96&width=96");
   const [showSelector, setShowSelector] = useState(false);
   const [userData, setUserData] = useState<any>(null);
   const [userStats, setUserStats] = useState(initialStats);
@@ -35,11 +30,21 @@ export default function ProfilePage() {
   const [projectsLoading, setProjectsLoading] = useState(false);
 
   useEffect(() => {
-    if (user && user.uid) {
-      getUser(Number(user.uid))
-        .then(data => {
+    if (user?.uid) {
+      getUserByFirebaseUid(user.uid)
+        .then((firebaseUserData) => {
+          console.log("\u{1F511} Usuario obtenido por Firebase UID:", firebaseUserData);
+          return getUser(firebaseUserData.id);
+        })
+        .then((data) => {
           setUserData(data);
-          setProfilePicture(data.profile_picture_url || "/placeholder.svg?height=96&width=96");
+
+          const pic =
+            data.profile_picture === 1
+              ? user?.photoURL || "/placeholder.svg?height=96&width=96"
+              : data.profile_picture_url || "/placeholder.svg?height=96&width=96";
+          setProfilePicture(pic);
+
           setUserStats({
             projectsPublished: data.projects_count || 0,
             followers: data.followers_count || 0,
@@ -47,15 +52,15 @@ export default function ProfilePage() {
             totalLikes: data.total_likes || 0,
             reputation: data.reputation || 0,
           });
-        })
-        .catch(() => {});
 
-      setProjectsLoading(true);
-      getUserProjects(Number(user.uid))
-        .then(data => {
+          setProjectsLoading(true);
+          return getUserProjects(data.id);
+        })
+        .then((data) => {
           setProjects(data);
         })
-        .catch(() => {
+        .catch((err) => {
+          console.error("\u274C Error al cargar perfil:", err);
           setProjects([]);
         })
         .finally(() => setProjectsLoading(false));
@@ -64,63 +69,63 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-[#f2f0eb]">
-      {/* Header */}
       <ResponsiveHeader />
-
       <div className="pt-4 sm:pt-8 px-4 sm:px-6">
         <div className="max-w-7xl mx-auto">
-          {/* Profile Header */}
           <div className="bg-white rounded-lg p-4 sm:p-8 shadow-sm mb-6 sm:mb-8">
             <div className="flex flex-col sm:flex-row items-start justify-between gap-4 sm:gap-6">
               <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 w-full">
-                <Avatar className="w-20 sm:w-24 h-20 sm:h-24">
-                  <AvatarImage src={profilePicture} />
-                  <AvatarFallback className="text-2xl">PV</AvatarFallback>
-                </Avatar>
+                <div
+                  className="relative group w-24 h-24 cursor-pointer"
+                  onClick={() => setShowSelector(true)}
+                >
+                  <Avatar className="w-full h-full">
+                    <AvatarImage src={profilePicture} />
+                    <AvatarFallback className="text-2xl">PV</AvatarFallback>
+                  </Avatar>
+                  <div className="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Edit className="text-white w-6 h-6" />
+                  </div>
+                </div>
+
                 <div>
-                  <h1 className="text-3xl font-bold text-[#3b3535] mb-2">{userData?.username || user?.displayName || user?.email || "Usuario"}</h1>
-                  <div className="flex items-center space-x-4 text-[#676765] mb-3">
+                  <h1 className="text-3xl font-bold text-[#3b3535] mb-2">
+                    {userData?.username || user?.displayName || user?.email || "Usuario"}
+                  </h1>
+                  <div className="flex items-center space-x-4 text-[#676765]">
                     <div className="flex items-center space-x-1">
                       <MapPin className="w-4 h-4" />
                       <span className="text-sm">{userData?.location || "Sin ubicación"}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
-                      <span className="text-sm">Se unió en {userData?.created_at ? new Date(userData.created_at).toLocaleDateString() : "-"}</span>
+                      <span className="text-sm">
+                        Se unió en {userData?.CreatedAt ? new Date(userData.CreatedAt).toLocaleDateString() : "-"}
+                      </span>
                     </div>
                   </div>
-                  <p className="text-[#3b3535] max-w-2xl">
-                    {userData?.bio || "Sin descripción."}
-                  </p>
-                  <Button className="mt-4 bg-[#c1835a] text-white rounded-full" onClick={() => setShowSelector(true)}>
-                    Cambiar foto de perfil
-                  </Button>
-                  {showSelector && (
-                    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
-                      <div className="bg-white rounded-2xl p-8 shadow-2xl">
-                        <h3 className="text-lg font-bold mb-4 text-[#3b3535]">Selecciona tu foto de perfil</h3>
-                        <ProfilePictureSelector
-                          currentPicture={profilePicture}
-                          onSelect={url => {
-                            setProfilePicture(url);
-                            setShowSelector(false);
-                          }}
-                        />
-                        <Button className="mt-4" variant="outline" onClick={() => setShowSelector(false)}>
-                          Cancelar
-                        </Button>
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
-              <Button className="bg-[#656b48] hover:bg-[#3b3535] text-white flex items-center space-x-2">
-                <Edit className="w-4 h-4" />
-                <span>Editar perfil</span>
-              </Button>
             </div>
 
-            {/* Stats */}
+            {showSelector && (
+              <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
+                <div className="bg-white rounded-2xl p-8 shadow-2xl">
+                  <h3 className="text-lg font-bold mb-4 text-[#3b3535]">Selecciona tu foto de perfil</h3>
+                  <ProfilePictureSelector
+                    currentPicture={profilePicture}
+                    onSelect={(url) => {
+                      setProfilePicture(url);
+                      setShowSelector(false);
+                    }}
+                  />
+                  <Button className="mt-4" variant="outline" onClick={() => setShowSelector(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-[#f6f6f6]">
               <div className="text-center">
                 <div className="text-2xl font-bold text-[#3b3535]">{userStats.projectsPublished}</div>
@@ -149,9 +154,7 @@ export default function ProfilePage() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Proyectos del usuario */}
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h2 className="text-xl font-semibold text-[#3b3535] mb-6">Proyectos recientes</h2>
                 {projectsLoading ? (
@@ -191,13 +194,9 @@ export default function ProfilePage() {
                   </Link>
                 </div>
               </div>
-
-              {/* Achievements eliminados, solo datos del backend */}
             </div>
 
-            {/* Sidebar */}
             <div className="space-y-6">
-              {/* Skills */}
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Especialidades</h3>
                 <div className="flex flex-wrap gap-2">
@@ -206,12 +205,11 @@ export default function ProfilePage() {
                       <Badge key={skill} variant="secondary" className="bg-[#f3f0eb] text-[#c89c6b]">
                         {skill}
                       </Badge>
-                    ),
+                    )
                   )}
                 </div>
               </div>
 
-              {/* Tools */}
               <div className="bg-white rounded-lg p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Herramientas favoritas</h3>
                 <div className="space-y-3">
@@ -223,25 +221,10 @@ export default function ProfilePage() {
                   ))}
                 </div>
               </div>
-
-              {/* Contact */}
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Contacto</h3>
-                <div className="space-y-3">
-                  <Button variant="outline" className="w-full justify-start bg-transparent">
-                    <Users className="w-4 h-4 mr-2" />
-                    Seguir
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start bg-transparent">
-                    <Folder className="w-4 h-4 mr-2" />
-                    Ver workshop
-                  </Button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }
