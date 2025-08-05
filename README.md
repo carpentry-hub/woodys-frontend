@@ -1,7 +1,7 @@
 # woodys-frontend
 
 <div align="center">
-  <img src="public/images/logo.png" alt="Woody's Workshop Logo" width="200"/>
+  <img src="/public/woodys-workshop.png" alt="Woody's Workshop Logo" width="200"/>
 </div>
 
 Web application for exploring, creating, and saving woodworking projects. Built with Next.js to deliver a fast and responsive user experience.
