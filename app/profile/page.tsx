@@ -94,13 +94,9 @@ export default function ProfilePage() {
                   </h1>
                   <div className="flex items-center space-x-4 text-[#676765]">
                     <div className="flex items-center space-x-1">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm">{userData?.location || "Sin ubicación"}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
                       <Calendar className="w-4 h-4" />
                       <span className="text-sm">
-                        Se unió en {userData?.CreatedAt ? new Date(userData.CreatedAt).toLocaleDateString() : "-"}
+                        Se unió en {userData?.created_at ? new Date(userData.created_at).toLocaleDateString() : "-"}
                       </span>
                     </div>
                   </div>
@@ -153,73 +149,44 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            <div className="lg:col-span-2 space-y-8">
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h2 className="text-xl font-semibold text-[#3b3535] mb-6">Proyectos recientes</h2>
-                {projectsLoading ? (
-                  <div className="text-center text-[#676765]">Cargando proyectos...</div>
-                ) : projects.length === 0 ? (
-                  <div className="text-center text-[#676765]">Aún no tiene proyectos publicados.</div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {projects.map((project) => (
-                      <div key={project.id} className="group cursor-pointer">
-                        <div className="aspect-square bg-[#f6f6f6] rounded-lg overflow-hidden mb-3">
-                          <Image
-                            src={project.image_url || "/placeholder.svg"}
-                            alt={project.title}
-                            width={200}
-                            height={200}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                        </div>
-                        <h3 className="font-medium text-[#3b3535] text-sm mb-1">{project.title}</h3>
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-1">
-                            <Star className="w-3 h-3 fill-[#c1835a] text-[#c1835a]" />
-                            <span className="text-xs text-[#676765]">{project.rating || "-"}</span>
-                          </div>
-                          <Badge variant="secondary" className="bg-[#f3f0eb] text-[#c89c6b] text-xs">
-                            {project.category || "Sin categoría"}
-                          </Badge>
-                        </div>
+          <div className="lg:col-span-2 space-y-8">
+            <div className="bg-white rounded-lg p-6 shadow-sm">
+              <h2 className="text-xl font-semibold text-[#3b3535] mb-6">Proyectos recientes</h2>
+              {projectsLoading ? (
+                <div className="text-center text-[#676765]">Cargando proyectos...</div>
+              ) : projects.length === 0 ? (
+                <div className="text-center text-[#676765]">Aún no tiene proyectos publicados.</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {projects.map((project) => (
+                    <div key={project.id} className="group cursor-pointer">
+                      <div className="aspect-square bg-[#f6f6f6] rounded-lg overflow-hidden mb-3">
+                        <Image
+                          src={project.image_url || "/placeholder.svg"}
+                          alt={project.title}
+                          width={200}
+                          height={200}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
                       </div>
-                    ))}
-                  </div>
-                )}
-                <div className="text-center mt-6">
-                  <Link href="/my-projects" className="text-[#c1835a] font-medium hover:underline">
-                    Ver todos los proyectos
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Especialidades</h3>
-                <div className="flex flex-wrap gap-2">
-                  {["Carpintería", "Diseño nórdico", "Madera maciza", "Minimalismo", "Sustentabilidad", "DIY"].map(
-                    (skill) => (
-                      <Badge key={skill} variant="secondary" className="bg-[#f3f0eb] text-[#c89c6b]">
-                        {skill}
-                      </Badge>
-                    )
-                  )}
-                </div>
-              </div>
-
-              <div className="bg-white rounded-lg p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Herramientas favoritas</h3>
-                <div className="space-y-3">
-                  {["Sierra circular", "Router", "Lijadora orbital", "Taladro percutor", "Formones"].map((tool) => (
-                    <div key={tool} className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-[#c1835a] rounded-full"></div>
-                      <span className="text-sm text-[#3b3535]">{tool}</span>
+                      <h3 className="font-medium text-[#3b3535] text-sm mb-1">{project.title}</h3>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-1">
+                          <Star className="w-3 h-3 fill-[#c1835a] text-[#c1835a]" />
+                          <span className="text-xs text-[#676765]">{project.rating || "-"}</span>
+                        </div>
+                        <Badge variant="secondary" className="bg-[#f3f0eb] text-[#c89c6b] text-xs">
+                          {project.category || "Sin categoría"}
+                        </Badge>
+                      </div>
                     </div>
                   ))}
                 </div>
+              )}
+              <div className="text-center mt-6">
+                <Link href="/my-projects" className="text-[#c1835a] font-medium hover:underline">
+                  Ver todos los proyectos
+                </Link>
               </div>
             </div>
           </div>
