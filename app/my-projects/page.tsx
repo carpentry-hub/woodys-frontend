@@ -22,7 +22,6 @@ import {
   Target,
 } from "lucide-react"
 import Image from "next/image"
-import { CreateProjectModal } from "@/components/create-project-modal"
 import { ResponsiveHeader } from "@/components/responsive-header"
 
 const userStats = {
@@ -561,9 +560,6 @@ export default function MyProjectsPage() {
           </TabsContent>
         </Tabs>
       </div>
-
-      {/* Create Project Modal */}
-      <CreateProjectModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </div>
   )
 }

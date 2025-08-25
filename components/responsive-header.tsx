@@ -45,10 +45,10 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
       always: false,
     },
     {
-      name: "Mi perfil",
-      href: "/profile",
+      name: "Crear proyecto",
+      href: "/create-project",
       icon: User,
-      active: pathname === "/profile",
+      active: pathname === "/create-project",
       always: false,
     },
   ];
