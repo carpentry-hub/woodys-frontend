@@ -3,6 +3,7 @@
 import { API_BASE_URL } from './api-routes';
 import { getIdTokenHeader } from '../../lib/auth-headers';
 import { User } from '../../models/user';
+import { auth } from '@/lib/firebase';
 
 // Crear usuario en la base de datos del proyecto (sin contraseña)
 export async function createUserInDB(userData: Omit<User, 'password'>) {
@@ -114,3 +115,15 @@ export async function getUserByFirebaseUid(uid: string) {
   return data;
 }
 
+export const getCurrentUserId = async (): Promise<string> => {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Usuario no autenticado');
+  }
+  return user.uid;
+};
+
+export const getCurrentUserFromDB = async () => {
+  const firebaseUid = await getCurrentUserId();
+  return await getUserByFirebaseUid(firebaseUid);
+};

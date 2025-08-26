@@ -4,10 +4,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { X, Plus, Check } from "lucide-react";
+import { X, Plus, Check, Loader2 } from "lucide-react";
 import { ResponsiveHeader } from "@/components/responsive-header";
 import Image from "next/image";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { createProject } from "@/app/services/projects";
+import { getCurrentUserFromDB } from "@/app/services/users";
+import { mapFormDataToProject } from "@/app/utils/project-mapper";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
 
 type FormData = {
   title: string,
@@ -24,6 +30,10 @@ type FormData = {
 }
 
 export default function CreateProjectPage() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const { uploadFile, uploadMultipleFiles, uploading } = useFileUpload();
+  
   const [formData, setFormData] = useState<FormData>({
     title: "",
     altura: "",
@@ -44,6 +54,9 @@ export default function CreateProjectPage() {
     tutorialFile: null as File | null,
   })
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const handleInputChange = (field: keyof Omit<FormData, "estilos" | "materiales" | "herramientas">, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value } as FormData))
   }
@@ -58,7 +71,6 @@ export default function CreateProjectPage() {
     }
   }
 
-  // Opciones para mapear
   const estilosOptions = [
     { value: "minimalista", label: "Minimalista" },
     { value: "nordico", label: "Nórdico" },
@@ -85,12 +97,6 @@ export default function CreateProjectPage() {
     { value: "herramientas-manuales", label: "Herr. manuales" },
   ];
 
-  const handleSubmit = () => {
-    console.log("Form data:", formData)
-    console.log("Uploaded files:", uploadedFiles)
-  }
-
-  // Función genérica para manejar multi-select
   const handleMultiSelect = (field: "estilos" | "materiales" | "herramientas", value: string) => {
     setFormData((prev) => {
       const exists = prev[field].includes(value)
@@ -101,12 +107,78 @@ export default function CreateProjectPage() {
     })
   }
 
+  const handleSubmit = async () => {
+    if (!user) {
+      setSubmitError("Debes estar autenticado para crear un proyecto");
+      return;
+    }
+
+    if (!formData.title.trim()) {
+      setSubmitError("El título es obligatorio");
+      return;
+    }
+
+    if (!formData.description.trim()) {
+      setSubmitError("La descripción es obligatoria");
+      return;
+    }
+
+    if (!uploadedFiles.coverImage) {
+      setSubmitError("La imagen de portada es obligatoria");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      const currentUser = await getCurrentUserFromDB();
+      const projectTempId = Date.now().toString();
+      
+      const portraitUrl = await uploadFile(
+        uploadedFiles.coverImage,
+        `projects/${projectTempId}/portrait`
+      );
+
+      let imageUrls: string[] = [];
+      if (uploadedFiles.images.length > 0) {
+        imageUrls = await uploadMultipleFiles(
+          uploadedFiles.images,
+          `projects/${projectTempId}/images`
+        );
+      }
+
+      let tutorialUrl = "";
+      if (uploadedFiles.tutorialFile) {
+        tutorialUrl = await uploadFile(
+          uploadedFiles.tutorialFile,
+          `projects/${projectTempId}/tutorial`
+        );
+      }
+
+      const fileUrls = {
+        portraitUrl,
+        imageUrls,
+        tutorialUrl,
+      };
+
+      const projectData = mapFormDataToProject(formData, fileUrls, currentUser.id);
+      const newProject = await createProject(projectData);
+      
+      router.push(`/projects/${newProject.id}`);
+      
+    } catch (error: any) {
+      setSubmitError(error.message || "Error al crear el proyecto. Intenta nuevamente.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="p-4 bg-[#f2f0eb]">
       <ResponsiveHeader />
       <div className="mx-auto w-full max-w-6xl bg-white rounded-lg shadow-xl">
         <div className="p-8">
-          {/* Header */}
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-[#3b3535]">Crear un nuevo proyecto</h2>
             <div className="flex items-center space-x-4">
@@ -121,9 +193,7 @@ export default function CreateProjectPage() {
             </div>
           </div>
 
-          {/* Form */}
           <div className="space-y-6">
-            {/* Title */}
             <div>
               <label className="block text-sm font-medium text-[#3b3535] mb-2">Título</label>
               <Input
@@ -135,7 +205,6 @@ export default function CreateProjectPage() {
               />
             </div>
 
-            {/* Specifications Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
                 { key: "altura", label: "Altura" },
@@ -155,7 +224,6 @@ export default function CreateProjectPage() {
               ))}
             </div>
 
-            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-[#3b3535] mb-2">Descripción</label>
               <Textarea
@@ -166,7 +234,6 @@ export default function CreateProjectPage() {
               />
             </div>
 
-            {/* Cover Image Upload */}
             <div>
               <label className="block text-sm font-medium text-[#3b3535] mb-2">Imagen de portada</label>
               <div className="border-2 border-dashed border-[#c89c6b] rounded-lg p-8 text-center bg-white/50">
@@ -183,9 +250,7 @@ export default function CreateProjectPage() {
               </div>
             </div>
 
-            {/* Images and Tutorial File Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Additional Images */}
               <div>
                 <label className="block text-sm font-medium text-[#3b3535] mb-2">Imágenes</label>
                 <div className="border-2 border-dashed border-[#c89c6b] rounded-lg p-6 text-center bg-white/50">
@@ -202,7 +267,6 @@ export default function CreateProjectPage() {
                 </div>
               </div>
 
-              {/* Tutorial File */}
               <div>
                 <label className="block text-sm font-medium text-[#3b3535] mb-2">Archivo tutorial</label>
                 <div className="border-2 border-dashed border-[#c89c6b] rounded-lg p-6 text-center bg-white/50">
@@ -220,7 +284,6 @@ export default function CreateProjectPage() {
               </div>
             </div>
 
-            {/* Dropdown Multi-selects */}
             {[
               { key: "estilos", label: "Estilos", options: estilosOptions },
               { key: "materiales", label: "Materiales", options: materialesOptions },
@@ -239,7 +302,6 @@ export default function CreateProjectPage() {
                   </SelectContent>
                 </Select>
 
-                {/* Chips seleccionados */}
                 <div className="flex flex-wrap gap-2 mt-2">
                   {(formData[key as "estilos" | "materiales" | "herramientas"] as string[]).map((val) => {
                     const opt = options.find((o) => o.value === val)
@@ -259,7 +321,6 @@ export default function CreateProjectPage() {
               </div>
             ))}
 
-            {/* Tiempo de armado y Ambiente */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-[#3b3535] mb-2">Tiempo de armado</label>
@@ -283,11 +344,29 @@ export default function CreateProjectPage() {
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {submitError && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                {submitError}
+              </div>
+            )}
+
             <div className="flex flex-col space-y-4 pt-6">
-              <Button onClick={handleSubmit} className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-4 text-lg font-semibold flex items-center justify-center space-x-2">
-                <Check className="w-5 h-5" />
-                <span>Publicar proyecto!</span>
+              <Button 
+                onClick={handleSubmit} 
+                disabled={isSubmitting || uploading}
+                className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-4 text-lg font-semibold flex items-center justify-center space-x-2 disabled:opacity-50"
+              >
+                {isSubmitting || uploading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>{uploading ? "Subiendo archivos..." : "Creando proyecto..."}</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-5 h-5" />
+                    <span>Publicar proyecto!</span>
+                  </>
+                )}
               </Button>
             </div>
           </div>
