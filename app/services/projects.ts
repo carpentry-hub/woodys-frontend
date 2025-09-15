@@ -41,7 +41,7 @@ export async function getProject(id: number) {
     }
 
     const project = await res.json();
-    console.log(`[getProject] Proyecto encontrado:`, project);
+    console.log('[getProject] Proyecto encontrado:', project);
     return project;
 }
 

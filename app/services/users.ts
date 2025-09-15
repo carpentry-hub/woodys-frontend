@@ -7,123 +7,123 @@ import { auth } from '@/lib/firebase';
 
 // Crear usuario en la base de datos del proyecto (sin contraseña)
 export async function createUserInDB(userData: Omit<User, 'password'>) {
-  const headers = await getIdTokenHeader();
-  console.log('[createUserInDB] Enviando datos del usuario:', userData);
+    const headers = await getIdTokenHeader();
+    console.log('[createUserInDB] Enviando datos del usuario:', userData);
 
-  const res = await fetch(`${API_BASE_URL}/users`, {
-    method: 'POST',
-    headers: {
-      ...headers,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(userData),
-  });
+    const res = await fetch(`${API_BASE_URL}/users`, {
+        method: 'POST',
+        headers: {
+            ...headers,
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+    });
 
-  console.log('[createUserInDB] Respuesta del servidor:', res.status);
+    console.log('[createUserInDB] Respuesta del servidor:', res.status);
 
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error('[createUserInDB] Error al crear usuario:', errorText);
-    throw new Error('Error creando usuario en la base de datos');
-  }
+    if (!res.ok) {
+        const errorText = await res.text();
+        console.error('[createUserInDB] Error al crear usuario:', errorText);
+        throw new Error('Error creando usuario en la base de datos');
+    }
 
-  const data = await res.json();
-  console.log('[createUserInDB] Usuario creado correctamente:', data);
-  return data;
+    const data = await res.json();
+    console.log('[createUserInDB] Usuario creado correctamente:', data);
+    return data;
 }
 
 export async function getUser(id: number) {
-  const headers = await getIdTokenHeader();
-  console.log(`[getUser] Buscando usuario con ID ${id}`);
+    const headers = await getIdTokenHeader();
+    console.log(`[getUser] Buscando usuario con ID ${id}`);
 
-  const res = await fetch(`${API_BASE_URL}/users/${id}`, { headers });
+    const res = await fetch(`${API_BASE_URL}/users/${id}`, { headers });
 
-  console.log('[getUser] Respuesta del servidor:', res.status);
+    console.log('[getUser] Respuesta del servidor:', res.status);
 
-  if (!res.ok) {
-    console.error('[getUser] Usuario no encontrado');
-    throw new Error('Usuario no encontrado');
-  }
+    if (!res.ok) {
+        console.error('[getUser] Usuario no encontrado');
+        throw new Error('Usuario no encontrado');
+    }
 
-  const data = await res.json();
-  console.log('[getUser] Usuario obtenido:', data);
-  return data;
+    const data = await res.json();
+    console.log('[getUser] Usuario obtenido:', data);
+    return data;
 }
 
 export async function getUserProjects(id: number) {
-  const headers = await getIdTokenHeader();
-  console.log(`[getUserProjects] Obteniendo proyectos para usuario ID ${id}`);
+    const headers = await getIdTokenHeader();
+    console.log(`[getUserProjects] Obteniendo proyectos para usuario ID ${id}`);
 
-  const res = await fetch(`${API_BASE_URL}/users/${id}/projects`, { headers });
+    const res = await fetch(`${API_BASE_URL}/users/${id}/projects`, { headers });
 
-  console.log('[getUserProjects] Respuesta del servidor:', res.status);
+    console.log('[getUserProjects] Respuesta del servidor:', res.status);
 
-  if (!res.ok) {
-    if (res.status === 404) {
-      return [];
+    if (!res.ok) {
+        if (res.status === 404) {
+            return [];
+        }
+        const errorText = await res.text();
+        console.error('[getUserProjects] Error:', errorText);
+        throw new Error('Error obteniendo proyectos del usuario');
     }
-    const errorText = await res.text();
-    console.error('[getUserProjects] Error:', errorText);
-    throw new Error('Error obteniendo proyectos del usuario');
-  }
 
-  const data = await res.json();
-  console.log('[getUserProjects] Proyectos obtenidos:', data);
-  return data;
+    const data = await res.json();
+    console.log('[getUserProjects] Proyectos obtenidos:', data);
+    return data;
 }
 
 export async function getUserProjectLists(id: number) {
-  const headers = await getIdTokenHeader();
-  console.log(`[getUserProjectLists] Obteniendo listas públicas para usuario ID ${id}`);
+    const headers = await getIdTokenHeader();
+    console.log(`[getUserProjectLists] Obteniendo listas públicas para usuario ID ${id}`);
 
-  const res = await fetch(`${API_BASE_URL}/users/${id}/project-lists`, { headers });
+    const res = await fetch(`${API_BASE_URL}/users/${id}/project-lists`, { headers });
 
-  console.log('[getUserProjectLists] Respuesta del servidor:', res.status);
+    console.log('[getUserProjectLists] Respuesta del servidor:', res.status);
 
-  if (!res.ok) {
-    const errorText = await res.text();
-    console.error('[getUserProjectLists] Error:', errorText);
+    if (!res.ok) {
+        const errorText = await res.text();
+        console.error('[getUserProjectLists] Error:', errorText);
 
-    if (res.status === 404) {
-      return [];
+        if (res.status === 404) {
+            return [];
+        }
+
+        throw new Error('Error obteniendo listas públicas del usuario');
     }
 
-    throw new Error('Error obteniendo listas públicas del usuario');
-  }
-
-  const data = await res.json();
-  console.log('[getUserProjectLists] Listas públicas obtenidas:', data);
-  return data;
+    const data = await res.json();
+    console.log('[getUserProjectLists] Listas públicas obtenidas:', data);
+    return data;
 }
 
 
 export async function getUserByFirebaseUid(uid: string) {
-  const headers = await getIdTokenHeader();
-  console.log(`[getUserByFirebaseUid] Buscando usuario con UID ${uid}`);
+    const headers = await getIdTokenHeader();
+    console.log(`[getUserByFirebaseUid] Buscando usuario con UID ${uid}`);
 
-  const res = await fetch(`${API_BASE_URL}/users/uid/${uid}`, { headers });
+    const res = await fetch(`${API_BASE_URL}/users/uid/${uid}`, { headers });
 
-  console.log('[getUserByFirebaseUid] Respuesta del servidor:', res.status);
+    console.log('[getUserByFirebaseUid] Respuesta del servidor:', res.status);
 
-  if (!res.ok) {
-    console.error('[getUserByFirebaseUid] Usuario no encontrado');
-    throw new Error('Usuario no encontrado');
-  }
+    if (!res.ok) {
+        console.error('[getUserByFirebaseUid] Usuario no encontrado');
+        throw new Error('Usuario no encontrado');
+    }
 
-  const data = await res.json();
-  console.log('[getUserByFirebaseUid] Usuario obtenido:', data);
-  return data;
+    const data = await res.json();
+    console.log('[getUserByFirebaseUid] Usuario obtenido:', data);
+    return data;
 }
 
 export const getCurrentUserId = async (): Promise<string> => {
-  const user = auth.currentUser;
-  if (!user) {
-    throw new Error('Usuario no autenticado');
-  }
-  return user.uid;
+    const user = auth.currentUser;
+    if (!user) {
+        throw new Error('Usuario no autenticado');
+    }
+    return user.uid;
 };
 
 export const getCurrentUserFromDB = async () => {
-  const firebaseUid = await getCurrentUserId();
-  return await getUserByFirebaseUid(firebaseUid);
+    const firebaseUid = await getCurrentUserId();
+    return await getUserByFirebaseUid(firebaseUid);
 };

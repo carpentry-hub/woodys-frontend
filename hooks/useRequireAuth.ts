@@ -1,16 +1,16 @@
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "../hooks/useAuth";
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '../hooks/useAuth';
 
 export function useRequireAuth() {
-  const { user, loading } = useAuth();
-  const router = useRouter();
+    const { user, loading } = useAuth();
+    const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.replace("/");
-    }
-  }, [user, loading, router]);
+    useEffect(() => {
+        if (!loading && !user) {
+            router.replace('/');
+        }
+    }, [user, loading, router]);
 
-  return { user, loading };
+    return { user, loading };
 }
