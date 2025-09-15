@@ -67,11 +67,16 @@ export async function deleteProject(id: number) {
 }
 
 export async function searchProjects(params: Record<string, string | number>) {
-    const query = new URLSearchParams(params as any).toString();
+    const query = new URLSearchParams(
+        Object.entries(params).reduce((acc, [key, value]) => {
+            acc[key] = String(value);
+            return acc;
+        }, {} as Record<string, string>)
+    ).toString();
+
     const headers = await getIdTokenHeader();
     const res = await fetch(`${API_BASE_URL}/projects/search?${query}`, { headers });
+
     if (!res.ok) throw new Error('Error buscando proyectos');
     return res.json();
 }
-
-// TODO: Revisar despues

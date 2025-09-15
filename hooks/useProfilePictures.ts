@@ -18,8 +18,10 @@ export function useProfilePictures() {
                     res.items.map(itemRef => getDownloadURL(itemRef))
                 );
                 setPictures(urls);
-            } catch (err: any) {
-                setError(err.message || 'Error al cargar imágenes');
+            } catch (err: unknown) {
+                if (err instanceof Error) {
+                    setError(err.message || 'Error al cargar imágenes');
+                }
             } finally {
                 setLoading(false);
             }

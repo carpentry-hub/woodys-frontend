@@ -13,9 +13,12 @@ export function useFileUpload() {
             const snapshot = await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
             return downloadURL;
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            }
             throw err;
+
         }
     };
 
@@ -32,8 +35,10 @@ export function useFileUpload() {
       
             const urls = await Promise.all(uploadPromises);
             return urls;
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            }
             throw err;
         } finally {
             setUploading(false);

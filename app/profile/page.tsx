@@ -11,6 +11,8 @@ import { ResponsiveHeader } from '@/components/responsive-header';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserByFirebaseUid, getUser, getUserProjects } from '../services/users';
 import ProfilePictureSelector from '@/components/profile-picture-selector';
+import { User } from '@/models/user';
+import { Project } from '@/models/project';
 
 const initialStats = {
     projectsPublished: 0,
@@ -24,9 +26,9 @@ export default function ProfilePage() {
     const { user } = useAuth();
     const [profilePicture, setProfilePicture] = useState('/placeholder.svg?height=96&width=96');
     const [showSelector, setShowSelector] = useState(false);
-    const [userData, setUserData] = useState<any>(null);
+    const [userData, setUserData] = useState<User | null>(null);
     const [userStats, setUserStats] = useState(initialStats);
-    const [projects, setProjects] = useState<any[]>([]);
+    const [projects, setProjects] = useState<Project[]>([]);
     const [projectsLoading, setProjectsLoading] = useState(false);
 
     useEffect(() => {
@@ -195,5 +197,3 @@ export default function ProfilePage() {
         </div>
     );
 }
-
-// TODO: REVISAR DE NUEVO

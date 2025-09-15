@@ -23,9 +23,12 @@ export function useAuth() {
         setLoading(true);
         try {
             await signInWithEmailAndPassword(auth, email, password);
-        } catch (err: any) {
-            setError(err.message);
-            throw err;
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+                throw err;
+            }
+            
         } finally {
             setLoading(false);
         }
@@ -45,9 +48,11 @@ export function useAuth() {
                 profile_picture: 1
             };
             await createUserInDB(userData as Omit<AppUser, 'password'>);
-        } catch (err: any) {
-            setError(err.message);
-            throw err;
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+                throw err;
+            }
         } finally {
             setLoading(false);
         }
@@ -58,8 +63,10 @@ export function useAuth() {
         setLoading(true);
         try {
             await signInWithEmailAndPassword(auth, email, password);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }
@@ -84,11 +91,15 @@ export function useAuth() {
                     profile_picture: 1,
                     firebase_uid: firebaseUser.uid,
                 });
-            } catch (e) {
-                // Si el usuario ya existe, ignoramos el error
+            } catch (err: unknown) {
+                if (err instanceof Error) {
+                    setError(err.message);
+                }
             }
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }
@@ -99,8 +110,10 @@ export function useAuth() {
         setLoading(true);
         try {
             await signOut(auth);
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            }
         } finally {
             setLoading(false);
         }

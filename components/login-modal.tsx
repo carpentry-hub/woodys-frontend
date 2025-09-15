@@ -18,6 +18,7 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
     const [isRegister, setIsRegister] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [submitError, setSubmitError] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -30,8 +31,10 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
                 await loginWithEmail(email, password);
             }
             onClose();
-        } catch (err: any) {
-            setError(err.message || 'Error');
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                setSubmitError(error.message);
+            }
         } finally {
             setLoading(false);
         }
@@ -82,8 +85,10 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
                 >
                     {isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
                 </button>
+                {submitError && <div className="text-red-500 text-xs text-center mt-2">{submitError}</div>}
             </div>
         </div>,
-        typeof window !== 'undefined' ? document.body : (null as any)
+        typeof window !== 'undefined' ? document.body : document.createElement('div')
     );
 }
+
