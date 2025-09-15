@@ -1,4 +1,7 @@
 export interface Project {
+  image_url: string;
+  rating: string;
+  category: string;
   id: number;
   owner: number;
   title: string;
