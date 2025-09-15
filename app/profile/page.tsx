@@ -161,10 +161,10 @@ export default function ProfilePage() {
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {projects.map((project) => (
-                                        <div key={project.id} className="group cursor-pointer">
+                                        <div   key={project.id} className="group cursor-pointer">
                                             <div className="aspect-square bg-[#f6f6f6] rounded-lg overflow-hidden mb-3">
                                                 <Image
-                                                    src={project.image_url || '/placeholder.svg'}
+                                                    src={project.portrait || '/placeholder.svg'}
                                                     alt={project.title}
                                                     width={200}
                                                     height={200}
@@ -175,7 +175,7 @@ export default function ProfilePage() {
                                             <div className="flex items-center justify-between">
                                                 <div className="flex items-center space-x-1">
                                                     <Star className="w-3 h-3 fill-[#c1835a] text-[#c1835a]" />
-                                                    <span className="text-xs text-[#676765]">{project.rating || '-'}</span>
+                                                    <span className="text-xs text-[#676765]">{project.average_rating || '-'}</span>
                                                 </div>
                                                 <Badge variant="secondary" className="bg-[#f3f0eb] text-[#c89c6b] text-xs">
                                                     {project.category || 'Sin categoría'}
