@@ -384,7 +384,7 @@ export default function ExplorerPage() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
                             {trendingProjects.map((project, index) => (
-                                <Link key={project.id} href="/product" className="group">
+                                <Link key={project.id} href="/project" className="group">
                                     <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1">
                                         <div className="aspect-[4/3] relative overflow-hidden">
                                             <Image
@@ -458,7 +458,7 @@ export default function ExplorerPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {newThisWeek.map((project) => (
-                                <Link key={project.id} href="/product" className="group">
+                                <Link key={project.id} href="/project" className="group">
                                     <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                                         <div className="aspect-[3/2] relative overflow-hidden">
                                             <Image
@@ -512,7 +512,7 @@ export default function ExplorerPage() {
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                                 {category.projects.map((project) => (
-                                    <Link key={project.id} href="/product" className="group">
+                                    <Link key={project.id} href="/project" className="group">
                                         <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
                                             <div className="aspect-square relative overflow-hidden">
                                                 <Image

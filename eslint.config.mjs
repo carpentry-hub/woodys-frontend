@@ -15,7 +15,7 @@ export default defineConfig([
             'eqeqeq': ['error', 'always'],
             'no-var': 'error',
             'prefer-const': 'error',  
-            'no-console': 'warn',
+            //'no-console': 'warn',
             'indent': ['error', 4],
             'react/react-in-jsx-scope': 'off',
             'react/prop-types': 'warn',

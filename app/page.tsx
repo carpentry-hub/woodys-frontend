@@ -282,7 +282,7 @@ export default function LandingPage() {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                             {[1, 2, 3, 4].map((projectIndex) => (
-                                <Link key={projectIndex} href="/product" className="group">
+                                <Link key={projectIndex} href="/project" className="group">
                                     <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all">
                                         <div className="aspect-square relative overflow-hidden">
                                             <Image
