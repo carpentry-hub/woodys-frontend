@@ -2,32 +2,22 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Edit, Calendar, Star } from 'lucide-react';
+import { Edit, Calendar } from 'lucide-react';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserByFirebaseUid, getUser, getUserProjects } from '../services/users';
 import ProfilePictureSelector from '@/components/profile-picture-selector';
 import { User } from '@/models/user';
 import { Project } from '@/models/project';
-
-const initialStats = {
-    projectsPublished: 0,
-    followers: 0,
-    following: 0,
-    totalLikes: 0,
-    reputation: 0,
-};
+import ProjectCard from '@/components/project-card';
 
 export default function ProfilePage() {
     const { user } = useAuth();
     const [profilePicture, setProfilePicture] = useState('/placeholder.svg?height=96&width=96');
     const [showSelector, setShowSelector] = useState(false);
     const [userData, setUserData] = useState<User | null>(null);
-    const [userStats, setUserStats] = useState(initialStats);
     const [projects, setProjects] = useState<Project[]>([]);
     const [projectsLoading, setProjectsLoading] = useState(false);
 
@@ -46,15 +36,6 @@ export default function ProfilePage() {
                 ? user?.photoURL || '/placeholder.svg?height=96&width=96'
                 : data.profile_picture_url || '/placeholder.svg?height=96&width=96';
                     setProfilePicture(pic);
-
-                    setUserStats({
-                        projectsPublished: data.projects_count || 0,
-                        followers: data.followers_count || 0,
-                        following: data.following_count || 0,
-                        totalLikes: data.total_likes || 0,
-                        reputation: data.reputation || 0,
-                    });
-
                     setProjectsLoading(true);
                     return getUserProjects(data.id);
                 })
@@ -123,65 +104,18 @@ export default function ProfilePage() {
                                 </div>
                             </div>
                         )}
-
-                        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6 mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-[#f6f6f6]">
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-[#3b3535]">{userStats.projectsPublished}</div>
-                                <div className="text-sm text-[#676765]">Proyectos</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-[#3b3535]">{userStats.followers.toLocaleString()}</div>
-                                <div className="text-sm text-[#676765]">Seguidores</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-[#3b3535]">{userStats.following}</div>
-                                <div className="text-sm text-[#676765]">Siguiendo</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-bold text-[#3b3535]">{userStats.totalLikes.toLocaleString()}</div>
-                                <div className="text-sm text-[#676765]">Me gusta</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="flex items-center justify-center space-x-1">
-                                    <span className="text-2xl font-bold text-[#3b3535]">{userStats.reputation}</span>
-                                    <Star className="w-5 h-5 fill-[#c1835a] text-[#c1835a]" />
-                                </div>
-                                <div className="text-sm text-[#676765]">Reputación</div>
-                            </div>
-                        </div>
                     </div>
-
                     <div className="lg:col-span-2 space-y-8">
-                        <div className="bg-white rounded-lg p-6 shadow-sm">
+                        <div className="rounded-lg p-6 shadow-sm">
                             <h2 className="text-xl font-semibold text-[#3b3535] mb-6">Proyectos recientes</h2>
                             {projectsLoading ? (
                                 <div className="text-center text-[#676765]">Cargando proyectos...</div>
                             ) : projects.length === 0 ? (
                                 <div className="text-center text-[#676765]">Aún no tiene proyectos publicados.</div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div className="grid lg:grid-cols-5 gap-4">
                                     {projects.map((project) => (
-                                        <div   key={project.id} className="group cursor-pointer">
-                                            <div className="aspect-square bg-[#f6f6f6] rounded-lg overflow-hidden mb-3">
-                                                <Image
-                                                    src={project.portrait || '/placeholder.svg'}
-                                                    alt={project.title}
-                                                    width={200}
-                                                    height={200}
-                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                />
-                                            </div>
-                                            <h3 className="font-medium text-[#3b3535] text-sm mb-1">{project.title}</h3>
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center space-x-1">
-                                                    <Star className="w-3 h-3 fill-[#c1835a] text-[#c1835a]" />
-                                                    <span className="text-xs text-[#676765]">{project.average_rating || '-'}</span>
-                                                </div>
-                                                <Badge variant="secondary" className="bg-[#f3f0eb] text-[#c89c6b] text-xs">
-                                                    {project.category || 'Sin categoría'}
-                                                </Badge>
-                                            </div>
-                                        </div>
+                                        <ProjectCard key={project.id} project={project} />
                                     ))}
                                 </div>
                             )}
