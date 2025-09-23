@@ -12,6 +12,7 @@ type FormData = {
   materiales: string[];
   herramientas: string[];
   ambiente: string;
+  is_public: boolean;
 };
 
 type FileUrls = {
@@ -43,5 +44,6 @@ export function mapFormDataToProject(
         image_url: '',
         rating: '',
         category: '',
+        is_public: formData.is_public
     };
 }

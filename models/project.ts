@@ -15,4 +15,5 @@ export interface Project {
   tutorial: string;
   description: string;
   time_to_build: number;
+  is_public: boolean;
 }
