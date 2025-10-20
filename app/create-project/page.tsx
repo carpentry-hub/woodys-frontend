@@ -26,14 +26,14 @@ type FormData = {
   tiempoArmado: string,
   materiales: string[],
   herramientas: string[],
-  ambiente: string
+  ambiente: string,
+  is_public: boolean
 }
 
 export default function CreateProjectPage() {
     const router = useRouter();
     const { user } = useAuth();
     const { uploadFile, uploadMultipleFiles, uploading } = useFileUpload();
-  
     const [formData, setFormData] = useState<FormData>({
         title: '',
         altura: '',
@@ -46,6 +46,7 @@ export default function CreateProjectPage() {
         materiales: [],
         herramientas: [],
         ambiente: '',
+        is_public: true,
     });
 
     const [uploadedFiles, setUploadedFiles] = useState({
