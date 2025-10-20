@@ -1,4 +1,5 @@
 
+import { getIdTokenHeader } from '@/lib/auth-headers';
 import { API_BASE_URL } from './api-routes';
 import { Project } from '@/models/project';
 
@@ -52,4 +53,29 @@ export async function getProject(id: number): Promise<Project> {
     const project = await res.json();
     console.log('[getProject] Datos del proyecto recibidos:', project);
     return project;
+}
+
+export async function createProject(data: Omit<Project, 'id' | 'average_rating' | 'rating_count'>) {
+    console.log('[createProject] Iniciando creación de proyecto con los siguientes datos:', data);
+    const headers = { 'Content-Type': 'application/json', ...(await getIdTokenHeader()) };
+    try {
+        const res = await fetch(`${API_BASE_URL}/projects`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(data),
+        });
+
+        console.log('[createProject] Respuesta del servidor:', res.status, res.statusText);
+        if (!res.ok) {
+            const errorBody = await res.text();
+            console.error('[createProject] Error del servidor:', errorBody);
+            throw new Error('Error del servidor al crear el proyecto');
+        }
+        const newProject = await res.json();
+        console.log('[createProject] Proyecto creado exitosamente en la BD:', newProject);
+        return newProject;
+    } catch (error) {
+        console.error('[createProject] Falló la llamada fetch:', error);
+        throw error;
+    }
 }
