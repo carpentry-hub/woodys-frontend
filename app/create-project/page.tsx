@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { X, Plus, Check, Loader2 } from 'lucide-react';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import Image from 'next/image';
-import { Select, SelectTrigger, SelectContent, SelectItem } from '@/components/ui/select';
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { createProject } from '@/app/services/projects';
 import { getCurrentUserFromDB } from '@/app/services/users';
@@ -58,7 +58,7 @@ export default function CreateProjectPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
-    const handleInputChange = (field: keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas'>, value: string) => {
+    const handleInputChange = (field: keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas' | 'is_public'>, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value } as FormData));
     };
 
@@ -97,6 +97,19 @@ export default function CreateProjectPage() {
         { value: 'router', label: 'Router' },
         { value: 'herramientas-manuales', label: 'Herr. manuales' },
     ];
+
+    const ambienteOptions = [
+        { value: 'comedor', label: 'Comedor' },
+        { value: 'living', label: 'Living' },
+        { value: 'cocina', label: 'Cocina' },
+        { value: 'exterior', label: 'Exterior' },
+        { value: 'dormitorio', label: 'Dormitorio' },
+        { value: 'oficina', label: 'Oficina' },
+        { value: 'baño', label: 'Baño' },
+        { value: 'infantil', label: 'Infantil' },
+        { value: 'otros', label: 'Otros' },
+    ];
+
 
     const handleMultiSelect = (field: 'estilos' | 'materiales' | 'herramientas', value: string) => {
         setFormData((prev) => {
@@ -166,7 +179,7 @@ export default function CreateProjectPage() {
             const projectData = mapFormDataToProject(formData, fileUrls, currentUser.id);
             const newProject = await createProject(projectData);
       
-            router.push(`/projects/${newProject.id}`);
+            router.push(`/project/${newProject.id}`);
       
         } catch (error: unknown) {
             if (error instanceof Error) {
@@ -221,8 +234,8 @@ export default function CreateProjectPage() {
                                     <label className="block text-sm font-medium text-[#3b3535] mb-2">{label}</label>
                                     <Input
                                         type="text"
-                                        value={formData[key as keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas'>] as string}
-                                        onChange={(e) => handleInputChange(key as keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas'>, e.target.value)}
+                                        value={formData[key as keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas'|'is_public'>] as string}
+                                        onChange={(e) => handleInputChange(key as keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas'| 'is_public'>, e.target.value)}
                                         className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]"
                                     />
                                 </div>
@@ -339,13 +352,16 @@ export default function CreateProjectPage() {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-[#3b3535] mb-2">Ambiente</label>
-                                <Input
-                                    type="text"
-                                    placeholder="Ej: Comedor"
-                                    value={formData.ambiente}
-                                    onChange={(e) => handleInputChange('ambiente', e.target.value)}
-                                    className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]"
-                                />
+                                <Select onValueChange={(value) => handleInputChange('ambiente', value)} value={formData.ambiente}>
+                                    <SelectTrigger className="w-full border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]">
+                                        <SelectValue placeholder="Selecciona un ambiente" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {ambienteOptions.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
 
