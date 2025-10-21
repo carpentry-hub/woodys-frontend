@@ -2,7 +2,7 @@
 
 import { API_BASE_URL } from './api-routes';
 import { getIdTokenHeader } from '../../lib/auth-headers';
-import { Comment } from '../../models/comment';
+import { Comment, NewComment } from '../../models/comment';
 
 export async function listProjectComments(id: number) {
     const headers = await getIdTokenHeader();
@@ -11,7 +11,7 @@ export async function listProjectComments(id: number) {
     return res.json();
 }
 
-export async function commentProject(id: number, data: Partial<Comment>) {
+export async function commentProject(id: number, data: NewComment) {
     const headers = { 'Content-Type': 'application/json', ...(await getIdTokenHeader()) };
     const res = await fetch(`${API_BASE_URL}/projects/${id}/comments`, {
         method: 'POST',
@@ -38,7 +38,7 @@ export async function getCommentReplies(id: number) {
     return res.json();
 }
 
-export async function replyToComment(id: number, data: Partial<Comment>) {
+export async function replyToComment(id: number, data: NewComment) {
     const headers = { 'Content-Type': 'application/json', ...(await getIdTokenHeader()) };
     const res = await fetch(`${API_BASE_URL}/comments/${id}/reply`, {
         method: 'POST',

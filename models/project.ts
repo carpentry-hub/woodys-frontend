@@ -13,6 +13,7 @@ export interface Project {
   style: string[]; // Es un array de strings
   time_to_build: number; // En minutos o horas, como un número
   is_public: boolean;
+  tutorial: string;
   average_rating: number;
   rating_count: number;
   created_at: string;
