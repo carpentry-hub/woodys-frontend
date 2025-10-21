@@ -15,13 +15,19 @@ export async function rateProject(id: number, data: Rating) {
     return res.json();
 }
 
-export async function updateRating(id: number, data: Rating) {
+export async function updateRating(id: number, data: Partial<Rating>) {
     const headers = { 'Content-Type': 'application/json', ...(await getIdTokenHeader()) };
-    const res = await fetch(`${API_BASE_URL}/projects/${id}/ratings`, {
+    const res = await fetch(`${API_BASE_URL}/ratings/${id}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify(data),
     });
     if (!res.ok) throw new Error('Error actualizando calificación');
+    return res.json();
+}
+
+export async function getProjectRatings(id: number): Promise<Rating[]> {
+    const res = await fetch(`${API_BASE_URL}/projects/${id}/ratings`);
+    if (!res.ok) throw new Error('Error obteniendo calificaciones del proyecto');
     return res.json();
 }

@@ -6,7 +6,7 @@ export interface User {
   username: string;
   email: string;
   reputation: number;
-  profile_picture?: string;
+  profile_picture?: number;
   firebase_uid: string;
   created_at: string;
 }

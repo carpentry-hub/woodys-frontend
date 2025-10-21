@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,8 +12,13 @@ import { ResponsiveHeader } from '@/components/responsive-header';
 import { Project } from '@/models/project';
 import { User } from '@/models/user';
 import { getProject } from '../../services/projects';
-import { getUser } from '../../services/users';
+import { getUser, getUserByFirebaseUid } from '../../services/users';
+import { rateProject, getProjectRatings, updateRating } from '../../services/ratings';
+import { listProjectComments, commentProject, replyToComment } from '../../services/comments';
+import { useAuthContext } from '@/contexts/AuthContext';
 import DOMPurify from 'dompurify';
+import { Comment, CommentWithUser } from '@/models/comment';
+import { Rating } from '@/models/rating';
 
 export default function ProjectPage() {
     const params = useParams();
@@ -21,6 +26,109 @@ export default function ProjectPage() {
     const [project, setProject] = useState<Project | null>(null);
     const [author, setAuthor] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [rating, setRating] = useState(0);
+    const [hoverRating, setHoverRating] = useState(0);
+    const { user } = useAuthContext();
+    const [appUser, setAppUser] = useState<User | null>(null);
+    const [userRating, setUserRating] = useState<Rating | null>(null);
+    const [comments, setComments] = useState<CommentWithUser[]>([]);
+    const [newComment, setNewComment] = useState('');
+    const [replyingTo, setReplyingTo] = useState<number | null>(null);
+    const [replyContent, setReplyContent] = useState('');
+
+    useEffect(() => {
+        if (user) {
+            getUserByFirebaseUid(user.uid).then(setAppUser);
+        }
+    }, [user]);
+
+    useEffect(() => {
+        if (appUser && project) {
+            getProjectRatings(project.id).then(ratings => {
+                const userRating = ratings.find(r => r.user_id === appUser.id);
+                setUserRating(userRating || null);
+            });
+        }
+    }, [appUser, project]);
+
+    const handleCommentSubmit = async () => {
+        if (!appUser || !project) {
+            alert('Debes iniciar sesión para comentar.');
+            return;
+        }
+        if (!newComment.trim()) return;
+
+        try {
+            await commentProject(project.id, { content: newComment, user_id: appUser.id, project_id: project.id });
+            setNewComment('');
+            // Refetch comments
+            const projectComments = await listProjectComments(project.id);
+            const commentsWithUsers = await Promise.all(
+                projectComments.map(async (comment: Comment) => {
+                    const user = await getUser(comment.user_id);
+                    return { ...comment, user };
+                })
+            );
+            setComments(commentsWithUsers);
+        } catch (error) {
+            console.error('Error al enviar el comentario:', error);
+            alert('Hubo un error al enviar tu comentario.');
+        }
+    };
+
+    const handleReplySubmit = async (commentId: number) => {
+        if (!appUser || !project) {
+            alert('Debes iniciar sesión para responder.');
+            return;
+        }
+        if (!replyContent.trim()) return;
+
+        try {
+            await replyToComment(commentId, { content: replyContent, user_id: appUser.id, project_id: project.id, parent_comment_id: commentId });
+            setReplyingTo(null);
+            setReplyContent('');
+            // Refetch comments
+            const projectComments = await listProjectComments(project.id);
+            const commentsWithUsers = await Promise.all(
+                projectComments.map(async (comment: Comment) => {
+                    const user = await getUser(comment.user_id);
+                    return { ...comment, user };
+                })
+            );
+            setComments(commentsWithUsers);
+        } catch (error) {
+            console.error('Error al enviar la respuesta:', error);
+            alert('Hubo un error al enviar tu respuesta.');
+        }
+    };
+
+    const handleRateProject = async (newRating: number) => {
+        if (!appUser) {
+            alert('Debes iniciar sesión para calificar.');
+            return;
+        }
+        if (!project) return;
+
+        try {
+            if (userRating) {
+                await updateRating(userRating.id, { ...userRating, value: newRating, updated_id: new Date().toISOString() });
+            } else {
+                await rateProject(project.id, { value: newRating, user_id: appUser.id, project_id: project.id });
+            }
+            setRating(newRating);
+
+            // Refetch ratings and recalculate average
+            const ratings = await getProjectRatings(project.id);
+            const averageRating = ratings.reduce((acc: number, rating: Rating) => acc + rating.value, 0) / ratings.length;
+            const ratingCount = ratings.length;
+
+            setProject({ ...project, average_rating: averageRating, rating_count: ratingCount });
+
+        } catch (error) {
+            console.error('Error al calificar el proyecto:', error);
+            alert('Hubo un error al procesar tu calificación.');
+        }
+    };
 
     useEffect(() => {
         if (!projectId) return;
@@ -30,12 +138,26 @@ export default function ProjectPage() {
             try {
                 const proj = await getProject(projectId);
                 const allImages = [proj.portrait, ...proj.images].filter(Boolean);
-                setProject({ ...proj, images: allImages });
+
+                const ratings = await getProjectRatings(projectId);
+                const averageRating = ratings.reduce((acc: number, rating: Rating) => acc + rating.value, 0) / ratings.length;
+                const ratingCount = ratings.length;
+
+                setProject({ ...proj, images: allImages, average_rating: averageRating, rating_count: ratingCount });
 
                 if (proj.owner) {
                     const user = await getUser(proj.owner);
                     setAuthor(user);
                 }
+
+                const projectComments = await listProjectComments(projectId);
+                const commentsWithUsers = await Promise.all(
+                    projectComments.map(async (comment: Comment) => {
+                        const user = await getUser(comment.user_id);
+                        return { ...comment, user };
+                    })
+                );
+                setComments(commentsWithUsers);
             } catch (error) {
                 console.error('Error cargando datos del proyecto:', error);
             } finally {
@@ -81,7 +203,17 @@ export default function ProjectPage() {
                                     <span className="text-xl font-bold text-[#3b3535]">{project.average_rating?.toFixed(1)}</span>
                                     <div className="flex gap-1 ml-2 mr-2">
                                         {[1, 2, 3, 4, 5].map((i) => (
-                                            <Star key={i} className={`w-5 h-5 ${i <= Math.round(project.average_rating) ? 'fill-[#c1835a] text-[#c1835a]' : 'text-gray-300'}`} />
+                                            <Star
+                                                key={i}
+                                                className={`w-5 h-5 cursor-pointer transition-colors ${
+                                                    (hoverRating || rating || Math.round(project.average_rating)) >= i
+                                                        ? 'fill-[#c1835a] text-[#c1835a]'
+                                                        : 'text-gray-300'
+                                                }`}
+                                                onClick={() => handleRateProject(i)}
+                                                onMouseEnter={() => setHoverRating(i)}
+                                                onMouseLeave={() => setHoverRating(0)}
+                                            />
                                         ))}
                                     </div>
                                     <span className="text-gray-500 text-sm">({project.rating_count} valoraciones)</span>
@@ -97,7 +229,7 @@ export default function ProjectPage() {
                                     <h3 className="text-lg font-semibold text-[#3b3535] mb-3">Autor</h3>
                                     <div className="flex items-center space-x-3">
                                         <Avatar className="w-12 h-12">
-                                            <AvatarImage src={author.profile_picture || '/placeholder.svg'} />
+                                            <AvatarImage src={author.profile_picture ? `/pfp/${author.profile_picture}.png` : '/placeholder.svg'} />
                                             <AvatarFallback>{author.username[0]?.toUpperCase()}</AvatarFallback>
                                         </Avatar>
                                         <div>
@@ -133,18 +265,89 @@ export default function ProjectPage() {
                                 />
                             </div>
 
-                            <Button className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-6 text-md font-semibold rounded-xl">
+                            <Button
+                                className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-6 text-md font-semibold rounded-xl"
+                                onClick={() => window.open(project.tutorial, '_blank')}
+                                disabled={!project.tutorial}
+                            >
                                 <Download className="w-5 h-5 mr-2" />
-                                Descargar Planos
+                                {project.tutorial ? 'Descargar Planos' : 'Planos no disponibles'}
                             </Button>
                         </div>
                     </div>
 
-                    {/* Sección de Comentarios (Placeholder) */}
+                    {/* Sección de Comentarios */}
                     <div className="mt-12">
                         <h3 className="text-2xl font-bold text-[#3b3535] mb-4">Comentarios</h3>
-                        <div className="p-6 bg-white/50 rounded-xl text-center text-gray-500">
-                            <p>La sección de comentarios estará disponible próximamente.</p>
+                        {appUser && (
+                            <div className="mb-6">
+                                <textarea
+                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c1835a] focus:border-transparent transition"
+                                    rows={3}
+                                    placeholder="Escribe tu comentario..."
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                />
+                                <Button
+                                    className="mt-2 bg-[#656b48] hover:bg-[#3b3535] text-white font-semibold rounded-lg"
+                                    onClick={handleCommentSubmit}
+                                >
+                                    Comentar
+                                </Button>
+                            </div>
+                        )}
+                        <div className="space-y-6">
+                            {comments.map((comment) => (
+                                <div key={comment.id}>
+                                    <div className="flex space-x-4">
+                                        <Avatar>
+                                            <AvatarImage src={comment.user?.profile_picture ? `/pfp/${comment.user.profile_picture}.png` : '/placeholder.svg'} />
+                                            <AvatarFallback>{comment.user?.username[0]?.toUpperCase()}</AvatarFallback>
+                                        </Avatar>
+                                        <div className="flex-1">
+                                            <div className="flex justify-between items-center">
+                                                <p className="font-semibold text-[#3b3535]">{comment.user?.username}</p>
+                                                <span className="text-xs text-gray-500">{new Date(comment.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                            <p className="text-gray-700">{comment.content}</p>
+                                            <div className="flex items-center space-x-4 mt-2">
+                                                <Button variant="ghost" size="sm" onClick={() => setReplyingTo(comment.id)}>Responder</Button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {replyingTo === comment.id && (
+                                        <div className="ml-14 mt-4">
+                                            <textarea
+                                                className="w-full p-2 border border-gray-300 rounded-lg"
+                                                rows={2}
+                                                placeholder={`Respondiendo a ${comment.user?.username}...`}
+                                                value={replyContent}
+                                                onChange={(e) => setReplyContent(e.target.value)}
+                                            />
+                                            <Button className="mt-2" size="sm" onClick={() => handleReplySubmit(comment.id)}>Enviar Respuesta</Button>
+                                        </div>
+                                    )}
+                                    {comment.replies && comment.replies.length > 0 && (
+                                        <div className="ml-14 mt-4 space-y-4">
+                                            {comment.replies.map(reply => (
+                                                <div key={reply.id} className="flex space-x-4">
+                                                    <Avatar>
+                                                        <AvatarImage src={reply.user?.profile_picture ? `/pfp/${reply.user.profile_picture}.png` : '/placeholder.svg'} />
+                                                        <AvatarFallback>{reply.user?.username[0]?.toUpperCase()}</AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex-1">
+                                                        <div className="flex justify-between items-center">
+                                                            <p className="font-semibold text-[#3b3535]">{reply.user?.username}</p>
+                                                            <span className="text-xs text-gray-500">{new Date(reply.created_at).toLocaleDateString()}</span>
+                                                        </div>
+                                                        <p className="text-gray-700">{reply.content}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>

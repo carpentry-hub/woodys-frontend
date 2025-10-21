@@ -7,11 +7,11 @@ import { Search, Star, Filter, Clock, Heart, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ResponsiveHeader } from '@/components/responsive-header';
-import { Project } from '@/models/project';
+import { ProjectWithUser } from '@/models/project-with-user';
 import { useProjects } from '@/hooks/useProjects';
 
 // --- Componente de Tarjeta de Proyecto (ProjectCard) ---
-const ProjectCard = ({ project }: { project: Project }) => {
+const ProjectCard = ({ project }: { project: ProjectWithUser }) => {
     // Nota: La 'dificultad' no existe en el nuevo modelo, por lo que se elimina la lógica de color.
     // Se puede recrear si se añade ese campo al backend.
 
@@ -49,8 +49,16 @@ const ProjectCard = ({ project }: { project: Project }) => {
                         {project.title}
                     </h3>
                     <div className="flex items-center justify-between mt-2">
-                        {/* Como 'owner' es un ID, no mostramos el autor para evitar errores */}
-                        <span className="text-sm text-gray-500">Por usuario #{project.owner}</span>
+                        <div className="flex items-center space-x-2">
+                            <Image
+                                src={'/placeholder-user.jpg'}
+                                alt={project.owner.username}
+                                width={24}
+                                height={24}
+                                className="rounded-full"
+                            />
+                            <span className="text-sm text-gray-500">{project.owner.username}</span>
+                        </div>
                         <div className="flex items-center space-x-1 text-sm text-gray-500">
                             <Star className="w-4 h-4 fill-[#c1835a] text-[#c1835a]" />
                             <span>{project.average_rating.toFixed(1)} ({project.rating_count})</span>
