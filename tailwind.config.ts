@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import typography from '@tailwindcss/typography';
 
 const config: Config = {
     darkMode: 'class',
@@ -104,7 +105,10 @@ const config: Config = {
                 'accordion-up': 'accordion-up 0.2s ease-out',
             },
         },
-    }
+    },
+    plugins: [
+        typography
+    ],
 };
 
 export default config;

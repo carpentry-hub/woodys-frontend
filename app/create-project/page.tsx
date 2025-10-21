@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { X, Plus, Check, Loader2 } from 'lucide-react';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import Image from 'next/image';
@@ -14,6 +13,7 @@ import { getCurrentUserFromDB } from '@/app/services/users';
 import { mapFormDataToProject } from '@/app/utils/project-mapper';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import DescriptionEditor from '@/components/form/description-editor';
 
 type FormData = {
   title: string,
@@ -244,11 +244,9 @@ export default function CreateProjectPage() {
 
                         <div>
                             <label className="block text-sm font-medium text-[#3b3535] mb-2">Descripción</label>
-                            <Textarea
-                                placeholder="Comenta un poco acerca de tu proyecto!"
+                            <DescriptionEditor
                                 value={formData.description}
-                                onChange={(e) => handleInputChange('description', e.target.value)}
-                                className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] min-h-[120px] resize-none"
+                                onChange={(html) => handleInputChange('description', html)}
                             />
                         </div>
 
