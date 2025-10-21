@@ -3,10 +3,14 @@
 // hooks/useProjects.ts
 import { useState, useEffect, useMemo } from 'react';
 import { Project } from '@/models/project';
+import { ProjectWithUser } from '@/models/project-with-user';
 import { searchProjects } from '@/app/services/projects';
+import { getUser } from '@/app/services/users';
+import { getProjectRatings } from '@/app/services/ratings';
+import { Rating } from '@/models/rating';
 
 export function useProjects() {
-    const [allPublicProjects, setAllPublicProjects] = useState<Project[]>([]);
+    const [allPublicProjects, setAllPublicProjects] = useState<ProjectWithUser[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -19,7 +23,16 @@ export function useProjects() {
             try {
                 const data = await searchProjects('', {});
                 const publicProjects = data.filter(p => p.is_public);
-                setAllPublicProjects(publicProjects);
+                const projectsWithData = await Promise.all(
+                    publicProjects.map(async (project: Project) => {
+                        const user = await getUser(project.owner);
+                        const ratings = await getProjectRatings(project.id);
+                        const averageRating = ratings.reduce((acc: number, rating: Rating) => acc + rating.value, 0) / ratings.length;
+                        const ratingCount = ratings.length;
+                        return { ...project, owner: user, average_rating: averageRating, rating_count: ratingCount };
+                    })
+                );
+                setAllPublicProjects(projectsWithData);
             } catch (err) {
                 console.error(err);
                 setError('Error cargando proyectos');
