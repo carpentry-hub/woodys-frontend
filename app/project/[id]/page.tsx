@@ -13,6 +13,7 @@ import { Project } from '@/models/project';
 import { User } from '@/models/user';
 import { getProject } from '../../services/projects';
 import { getUser } from '../../services/users';
+import DOMPurify from 'dompurify';
 
 export default function ProjectPage() {
     const params = useParams();
@@ -61,6 +62,9 @@ export default function ProjectPage() {
             </div>
         );
     }
+    const cleanDescriptionHtml = typeof window !== 'undefined' && project?.description
+        ? DOMPurify.sanitize(project.description)
+        : '';
 
     return (
         <div className="min-h-screen bg-[#f2f0eb]">
@@ -123,7 +127,10 @@ export default function ProjectPage() {
                             {/* Descripción */}
                             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
                                 <h3 className="text-lg font-semibold text-[#3b3535] mb-2">Descripción</h3>
-                                <p className="text-gray-700 text-sm leading-relaxed">{project.description}</p>
+                                <div
+                                    className="prose prose-sm max-w-none text-gray-700 leading-relaxed"
+                                    dangerouslySetInnerHTML={{ __html: cleanDescriptionHtml }}
+                                />
                             </div>
 
                             <Button className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-6 text-md font-semibold rounded-xl">
