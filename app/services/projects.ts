@@ -55,7 +55,7 @@ export async function getProject(id: number): Promise<Project> {
     return project;
 }
 
-export async function createProject(data: Omit<Project, 'id' | 'average_rating' | 'rating_count'>) {
+export async function createProject(data: Omit<Project, 'id' | 'average_rating' | 'rating_count' | 'created_at' | 'updated_at'>) {
     console.log('[createProject] Iniciando creación de proyecto con los siguientes datos:', data);
     const headers = { 'Content-Type': 'application/json', ...(await getIdTokenHeader()) };
     try {
