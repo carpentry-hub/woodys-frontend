@@ -223,23 +223,73 @@ export default function CreateProjectPage() {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {[
-                                { key: 'altura', label: 'Altura' },
-                                { key: 'largo', label: 'Largo' },
-                                { key: 'ancho', label: 'Ancho' },
-                                { key: 'materialPrincipal', label: 'Material principal' },
-                            ].map(({ key, label }) => (
-                                <div key={key}>
-                                    <label className="block text-sm font-medium text-[#3b3535] mb-2">{label}</label>
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            {/* Altura */}
+                            <div>
+                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Altura</label>
+                                <div className="relative">
                                     <Input
-                                        type="text"
-                                        value={formData[key as keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas'|'is_public'>] as string}
-                                        onChange={(e) => handleInputChange(key as keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas'| 'is_public'>, e.target.value)}
-                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]"
+                                        type="number"
+                                        min={0}
+                                        placeholder="Ej: 45"
+                                        value={formData.altura}
+                                        onChange={(e) => handleInputChange('altura', e.target.value)}
+                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10" // Padding derecho
                                     />
+                                    <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+                cm
+                                    </span>
                                 </div>
-                            ))}
+                            </div>
+
+                            {/* Largo */}
+                            <div>
+                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Largo</label>
+                                <div className="relative">
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        placeholder="Ej: 120"
+                                        value={formData.largo}
+                                        onChange={(e) => handleInputChange('largo', e.target.value)}
+                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
+                                    />
+                                    <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+                cm
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Ancho */}
+                            <div>
+                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Ancho</label>
+                                <div className="relative">
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        placeholder="Ej: 60"
+                                        value={formData.ancho}
+                                        onChange={(e) => handleInputChange('ancho', e.target.value)}
+                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
+                                    />
+                                    <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+                cm
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Material Principal (este se queda como texto normal) */}
+                            <div>
+                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Material principal</label>
+                                <Input
+                                    type="text"
+                                    min={0}
+                                    placeholder="Ej: Madera de Pino"
+                                    value={formData.materialPrincipal}
+                                    onChange={(e) => handleInputChange('materialPrincipal', e.target.value)}
+                                    className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]"
+                                />
+                            </div>
                         </div>
 
                         <div>
@@ -340,13 +390,19 @@ export default function CreateProjectPage() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-[#3b3535] mb-2">Tiempo de armado</label>
-                                <Input
-                                    type="text"
-                                    placeholder="Ej: 2-5 horas"
-                                    value={formData.tiempoArmado}
-                                    onChange={(e) => handleInputChange('tiempoArmado', e.target.value)}
-                                    className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]"
-                                />
+                                <div className="relative">
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        placeholder="Ej: 4"
+                                        value={formData.tiempoArmado}
+                                        onChange={(e) => handleInputChange('tiempoArmado', e.target.value)}
+                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-12" // Padding derecho
+                                    />
+                                    <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+            horas
+                                    </span>
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-[#3b3535] mb-2">Ambiente</label>

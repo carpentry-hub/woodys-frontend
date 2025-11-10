@@ -130,3 +130,15 @@ html, body, * {
 .animate-carousel-right {
   animation: carousel-right 20s linear infinite;
 }
+
+
+input[type=number]::-webkit-inner-spin-button, 
+input[type=number]::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+
+input[type=number] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
