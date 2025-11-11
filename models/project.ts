@@ -19,5 +19,5 @@ export interface Project {
   length: number;
   width: number;
   main_material: string;
-  environment: string;
+  environment: string | string[];
 }
