@@ -6,7 +6,7 @@ import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Download, Star, Clock, Box, Wrench, Loader2, Home } from 'lucide-react';
+import { Download, Star, Clock, Wrench, Loader2, Home, Palette, CheckSquare } from 'lucide-react';
 import { ProductGallery } from '@/components/product-gallery';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { Project } from '@/models/project';
@@ -45,7 +45,7 @@ function CommentItem({
     return (
         <div className={borderClass} style={indentStyle}>
             <div className="flex space-x-4">
-                <Avatar>
+                <Avatar className="border-2 border-[#c1835a]">
                     <AvatarImage src={comment.user?.profile_picture ? `/pfp/${comment.user.profile_picture}.png` : '/placeholder.svg'} />
                     <AvatarFallback>{comment.user?.username[0]?.toUpperCase()}</AvatarFallback>
                 </Avatar>
@@ -407,7 +407,7 @@ export default function ProjectPage() {
 
     // Format dimensions - handle null, undefined, and ensure proper number formatting
     const formatDimension = (value: number | null | undefined): string => {
-        if (value == null || value === undefined || isNaN(value)) {
+        if (value === null || value === undefined || isNaN(value)) {
             return '0';
         }
         // Remove unnecessary decimal places if it's a whole number
@@ -485,7 +485,6 @@ export default function ProjectPage() {
                         </div>
 
                         <div className="lg:col-span-2 space-y-6">
-                            {/* Autor - Alineado con el box de dimensiones */}
                             {author && (
                                 <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
                                     <h3 className="text-lg font-semibold text-[#3b3535] mb-3">Autor</h3>
@@ -497,7 +496,7 @@ export default function ProjectPage() {
                                         <div>
                                             <p className="font-semibold text-md text-[#3b3535]">{author.username}</p>
                                             <span className="text-sm text-gray-500">
-                                                Reputación: {calculatedReputation !== null 
+                        Reputación: {calculatedReputation !== null 
                                                     ? calculatedReputation.toFixed(1) 
                                                     : (author.reputation || 0).toFixed(1)}
                                             </span>
@@ -506,15 +505,16 @@ export default function ProjectPage() {
                                 </div>
                             )}
 
-                            {/* Estilos */}
                             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
-                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Estilos</h3>
+                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center">
+                                    <Palette className="w-4 h-4 mr-2 text-[#3b3535]"/> Estilos
+                                </h3>
                                 <div className="flex flex-wrap gap-2">
                                     {project.style.map((s, i) => (
                                         <Badge
                                             key={i}
                                             variant="secondary"
-                                            className="bg-blue-100 text-blue-700 border border-blue-200 text-sm font-medium px-3 py-1 shadow-sm"
+                                            className="bg-[#656b48]/20 text-[#3b3535] border border-[#656b48]/30 text-sm font-medium px-3 py-1 shadow-sm"
                                         >
                                             {s}
                                         </Badge>
@@ -522,25 +522,27 @@ export default function ProjectPage() {
                                 </div>
                             </div>
 
-                            {/* Materiales */}
                             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
-                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Materiales</h3>
+                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center">
+                                    <CheckSquare className="w-4 h-4 mr-2 text-[#3b3535]"/> Materiales
+                                </h3>
                                 <div className="flex flex-wrap gap-2">
                                     {project.materials.map((m, i) => (
-                                        <Badge key={i} variant="secondary" className="bg-[#e4d5c5] text-[#9a6a49] text-sm font-medium px-3 py-1">{m}</Badge>
+                                        <Badge key={i} variant="secondary" className="bg-[#e4d5c5] text-[#9a6a49] text-sm font-medium px-3 py-1 shadow-sm">{m}</Badge>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Herramientas */}
                             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
-                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Herramientas</h3>
+                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center">
+                                    <Wrench className="w-4 h-4 mr-2 text-[#3b3535]"/> Herramientas
+                                </h3>
                                 <div className="flex flex-wrap gap-2">
                                     {project.tools.map((t, i) => (
                                         <Badge
                                             key={i}
                                             variant="secondary"
-                                            className="bg-green-100 text-green-700 border border-green-200 text-sm font-medium px-3 py-1 shadow-sm"
+                                            className="bg-gray-200 text-gray-800 border border-gray-300 text-sm font-medium px-3 py-1 shadow-sm"
                                         >
                                             {t}
                                         </Badge>
@@ -548,19 +550,22 @@ export default function ProjectPage() {
                                 </div>
                             </div>
 
-                            {/* Tiempo de armado y Ambiente */}
                             <div className="grid grid-cols-1 gap-4">
                                 <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
-                                    <h3 className="text-lg font-semibold text-[#3b3535] mb-2">Tiempo de armado</h3>
-                                    <div className="flex items-center">
-                                        <Clock className="w-4 h-4 mr-2 text-[#c1835a]"/>
+                                    <h3 className="text-lg font-semibold text-[#3b3535] mb-2 flex items-center">
+                                        <Clock className="w-4 h-4 mr-2 text-[#3b3535]"/>
+                Tiempo de armado
+                                    </h3>
+                                    <div className="flex items-center pl-6">
                                         <strong className="text-sm">{project.time_to_build} hs</strong>
                                     </div>
                                 </div>
                                 <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
-                                    <h3 className="text-lg font-semibold text-[#3b3535] mb-2">Ambiente</h3>
-                                    <div className="flex items-center">
-                                        <Home className="w-4 h-4 mr-2 text-[#c1835a]"/>
+                                    <h3 className="text-lg font-semibold text-[#3b3535] mb-2 flex items-center">
+                                        <Home className="w-4 h-4 mr-2 text-[#3b3535]"/>
+                Ambiente
+                                    </h3>
+                                    <div className="flex items-center pl-6">
                                         <strong className="text-sm">{environmentValue || 'N/A'}</strong>
                                     </div>
                                 </div>
@@ -569,12 +574,12 @@ export default function ProjectPage() {
                     </div>
 
                     {/* Sección de Comentarios */}
-                    <div className="mt-12">
+                    <div className="border border-gray-200 rounded-xl p-6 bg-white/50 mt-12">
                         <h3 className="text-2xl font-bold text-[#3b3535] mb-4">Comentarios</h3>
                         {appUser && (
                             <div className="mb-6">
                                 <textarea
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#c1835a] focus:border-transparent transition"
+                                    className="w-full p-3 border border-[#c89c6b] rounded-lg focus:ring-2 focus:ring-[#c1835a] focus:border-transparent transition bg-white"
                                     rows={3}
                                     placeholder="Escribe tu comentario..."
                                     value={newComment}
@@ -584,7 +589,7 @@ export default function ProjectPage() {
                                     className="mt-2 bg-[#656b48] hover:bg-[#3b3535] text-white font-semibold rounded-lg"
                                     onClick={handleCommentSubmit}
                                 >
-                                    Comentar
+                Comentar
                                 </Button>
                             </div>
                         )}

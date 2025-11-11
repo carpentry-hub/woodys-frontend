@@ -349,192 +349,216 @@ export default function CreateProjectPage() {
                     </div>
 
                     <div className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-[#3b3535] mb-2">Título</label>
-                            <Input
-                                type="text"
-                                placeholder="Ej: Mesa Fachera para exterior"
-                                value={formData.title}
-                                onChange={(e) => handleInputChange('title', e.target.value)}
-                                className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]"
-                            />
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {/* --- SECCIÓN 1: INFORMACIÓN PRINCIPAL --- */}
+                        <div className="space-y-4">
+                            <h3 className="text-xl font-semibold text-[#3b3535] border-b border-[#c89c6b]/50 pb-2">
+                                Información Principal
+                            </h3>
                             <div>
-                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Altura</label>
-                                <div className="relative">
-                                    <Input
-                                        type="number"
-                                        min={0}
-                                        placeholder="Ej: 45"
-                                        value={formData.altura}
-                                        onChange={(e) => handleInputChange('altura', e.target.value)}
-                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
-                                    />
-                                    <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
-                                        cm
-                                    </span>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Largo</label>
-                                <div className="relative">
-                                    <Input
-                                        type="number"
-                                        min={0}
-                                        placeholder="Ej: 120"
-                                        value={formData.largo}
-                                        onChange={(e) => handleInputChange('largo', e.target.value)}
-                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
-                                    />
-                                    <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
-                                        cm
-                                    </span>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Ancho</label>
-                                <div className="relative">
-                                    <Input
-                                        type="number"
-                                        min={0}
-                                        placeholder="Ej: 60"
-                                        value={formData.ancho}
-                                        onChange={(e) => handleInputChange('ancho', e.target.value)}
-                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
-                                    />
-                                    <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
-                                        cm
-                                    </span>
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Material principal</label>
+                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Título</label>
                                 <Input
                                     type="text"
-                                    placeholder="Ej: Madera de Pino"
-                                    value={formData.materialPrincipal}
-                                    onChange={(e) => handleInputChange('materialPrincipal', e.target.value)}
+                                    placeholder="Ej: Mesa Fachera para exterior"
+                                    value={formData.title}
+                                    onChange={(e) => handleInputChange('title', e.target.value)}
                                     className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]"
                                 />
                             </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-[#3b3535] mb-2">Altura</label>
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            placeholder="Ej: 45"
+                                            value={formData.altura}
+                                            onChange={(e) => handleInputChange('altura', e.target.value)}
+                                            className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
+                                        />
+                                        <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+                                            cm
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[#3b3535] mb-2">Largo</label>
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            placeholder="Ej: 120"
+                                            value={formData.largo}
+                                            onChange={(e) => handleInputChange('largo', e.target.value)}
+                                            className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
+                                        />
+                                        <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+                                            cm
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[#3b3535] mb-2">Ancho</label>
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            placeholder="Ej: 60"
+                                            value={formData.ancho}
+                                            onChange={(e) => handleInputChange('ancho', e.target.value)}
+                                            className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
+                                        />
+                                        <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+                                            cm
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[#3b3535] mb-2">Material principal</label>
+                                    <Input
+                                        type="text"
+                                        placeholder="Ej: Madera de Pino"
+                                        value={formData.materialPrincipal}
+                                        onChange={(e) => handleInputChange('materialPrincipal', e.target.value)}
+                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]"
+                                    />
+                                </div>
+                            </div>
                         </div>
 
+                        <hr className="border-[#c89c6b]/30" />
+
+                        {/* --- SECCIÓN 2: DESCRIPCIÓN --- */}
                         <div>
-                            <label className="block text-sm font-medium text-[#3b3535] mb-2">Descripción</label>
+                            <label className="block text-xl font-semibold text-[#3b3535] mb-4">Descripción</label>
                             <DescriptionEditor
                                 value={formData.description}
                                 onChange={(html) => handleInputChange('description', html)}
                             />
                         </div>
 
-                        {/* --- INICIO: SECCIÓN DE IMÁGENES MODIFICADA --- */}
-                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-                            <ProjectImageManager
-                                coverPreview={uploadedFiles.coverImage.preview}
-                                onCoverChange={handleCoverImageChange}
-                                onCoverRemove={removeCoverImage}
-                                
-                                galleryImages={uploadedFiles.images}
-                                onGalleryChange={handleImagesChange}
-                                onGalleryRemove={removeImage}
-                                
-                                maxFiles={MAX_IMAGES}
-                                maxSizeMB={MAX_SIZE_MB}
-                                allowedType={ALLOWED_IMAGE_TYPE}
+                        <hr className="border-[#c89c6b]/30" />
+
+                        {/* --- SECCIÓN 3: ARCHIVOS DEL PROYECTO --- */}
+                        <div className="space-y-6">
+                            <h3 className="text-xl font-semibold text-[#3b3535] border-b border-[#c89c6b]/50 pb-2">
+                                Archivos del Proyecto
+                            </h3>
+                            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                                <ProjectImageManager
+                                    coverPreview={uploadedFiles.coverImage.preview}
+                                    onCoverChange={handleCoverImageChange}
+                                    onCoverRemove={removeCoverImage}
+                                    galleryImages={uploadedFiles.images}
+                                    onGalleryChange={handleImagesChange}
+                                    onGalleryRemove={removeImage}
+                                    maxFiles={MAX_IMAGES}
+                                    maxSizeMB={MAX_SIZE_MB}
+                                    allowedType={ALLOWED_IMAGE_TYPE}
+                                />
+                            </DndContext>
+
+                            <TutorialFileUploader
+                                file={uploadedFiles.tutorialFile}
+                                onChange={handleTutorialChange}
                             />
-                        </DndContext>
-                        {/* --- FIN: SECCIÓN DE IMÁGENES MODIFICADA --- */}
 
-                        <TutorialFileUploader
-                            file={uploadedFiles.tutorialFile}
-                            onChange={handleTutorialChange}
-                        />
-
-                        {imageError && (
-                            <div className="flex items-center p-3 rounded-md bg-red-50 border border-red-200">
-                                <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-                                <p className="text-sm text-red-700">{imageError}</p>
-                            </div>
-                        )}
-
-                        {[
-                            { key: 'estilos', label: 'Estilos', options: estilosOptions },
-                            { key: 'materiales', label: 'Materiales', options: materialesOptions },
-                            { key: 'herramientas', label: 'Herramientas', options: herramientasOptions },
-                        ].map(({ key, label, options }) => (
-                            <div key={key}>
-                                <label className="block text-sm font-medium text-[#3b3535] mb-2">{label}</label>
-                                <Select onValueChange={(val) => handleMultiSelect(key as 'estilos' | 'materiales' | 'herramientas', val)}>
-                                    <SelectTrigger className="w-full border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]">
-                                        Selecciona {label.toLowerCase()}
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {options.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-
-                                <div className="flex flex-wrap gap-2 mt-2">
-                                    {(formData[key as 'estilos' | 'materiales' | 'herramientas'] as string[]).map((val) => {
-                                        const opt = options.find((o) => o.value === val);
-                                        return (
-                                            <span
-                                                key={val}
-                                                className="flex items-center px-3 py-1 rounded-full text-sm bg-[#c89c6b] text-white"
-                                            >
-                                                {opt?.label}
-                                                <button type="button" onClick={() => handleMultiSelect(key as 'estilos' | 'materiales' | 'herramientas', val)} className="ml-2">
-                                                    <X className="w-4 h-4" />
-                                                </button>
-                                            </span>
-                                        );
-                                    })}
+                            {imageError && (
+                                <div className="flex items-center p-3 rounded-md bg-red-50 border border-red-200">
+                                    <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                                    <p className="text-sm text-red-700">{imageError}</p>
                                 </div>
-                            </div>
-                        ))}
+                            )}
+                        </div>
+                        
+                        <hr className="border-[#c89c6b]/30" />
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Tiempo de armado</label>
-                                <div className="relative">
-                                    <Input
-                                        type="number"
-                                        min={0}
-                                        placeholder="Ej: 4"
-                                        value={formData.tiempoArmado}
-                                        onChange={(e) => handleInputChange('tiempoArmado', e.target.value)}
-                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-12"
-                                    />
-                                    <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
-                                        horas
-                                    </span>
+                        {/* --- SECCIÓN 4: CLASIFICACIÓN Y DETALLES --- */}
+                        <div className="space-y-6">
+                            <h3 className="text-xl font-semibold text-[#3b3535] border-b border-[#c89c6b]/50 pb-2">
+                                Clasificación y Detalles
+                            </h3>
+                            
+                            {[
+                                { key: 'estilos', label: 'Estilos', options: estilosOptions },
+                                { key: 'materiales', label: 'Materiales', options: materialesOptions },
+                                { key: 'herramientas', label: 'Herramientas', options: herramientasOptions },
+                            ].map(({ key, label, options }) => (
+                                <div key={key}>
+                                    <label className="block text-sm font-medium text-[#3b3535] mb-2">{label}</label>
+                                    <Select onValueChange={(val) => handleMultiSelect(key as 'estilos' | 'materiales' | 'herramientas', val)}>
+                                        <SelectTrigger className="w-full border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]">
+                                            Selecciona {label.toLowerCase()}
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {options.map((opt) => (
+                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+
+                                    <div className="flex flex-wrap gap-2 mt-2">
+                                        {(formData[key as 'estilos' | 'materiales' | 'herramientas'] as string[]).map((val) => {
+                                            const opt = options.find((o) => o.value === val);
+                                            return (
+                                                <span
+                                                    key={val}
+                                                    className="flex items-center px-3 py-1 rounded-full text-sm bg-[#c89c6b] text-white"
+                                                >
+                                                    {opt?.label}
+                                                    <button type="button" onClick={() => handleMultiSelect(key as 'estilos' | 'materiales' | 'herramientas', val)} className="ml-2">
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                </span>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Ambiente</label>
-                                <Select onValueChange={(value) => handleInputChange('ambiente', value)} value={formData.ambiente}>
-                                    <SelectTrigger className="w-full border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]">
-                                        <SelectValue placeholder="Selecciona un ambiente" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {ambienteOptions.map((opt) => (
-                                            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                            ))}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-[#3b3535] mb-2">Tiempo de armado</label>
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            placeholder="Ej: 4"
+                                            value={formData.tiempoArmado}
+                                            onChange={(e) => handleInputChange('tiempoArmado', e.target.value)}
+                                            className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-12"
+                                        />
+                                        <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
+                                            horas
+                                        </span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-[#3b3535] mb-2">Ambiente</label>
+                                    <Select onValueChange={(value) => handleInputChange('ambiente', value)} value={formData.ambiente}>
+                                        <SelectTrigger className="w-full border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]">
+                                            <SelectValue placeholder="Selecciona un ambiente" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {ambienteOptions.map((opt) => (
+                                                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
                         </div>
 
+                        {/* --- SECCIÓN 5: PUBLICAR --- */}
                         {submitError && (
                             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                                 {submitError}
                             </div>
                         )}
 
-                        <div className="flex flex-col space-y-4 pt-6">
+                        <div className="flex flex-col space-y-4 pt-6 border-t border-[#c89c6b]/30">
                             <Button 
                                 onClick={handleSubmit} 
                                 disabled={isSubmitting || uploading}
