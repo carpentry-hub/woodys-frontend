@@ -20,7 +20,7 @@ import DOMPurify from 'dompurify';
 import { Comment, CommentWithUser } from '@/models/comment';
 import { Rating } from '@/models/rating';
 
-// Recursive component for rendering comment tree
+
 function CommentItem({ 
     comment, 
     replyingTo, 
