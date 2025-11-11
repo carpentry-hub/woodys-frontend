@@ -449,8 +449,30 @@ export default function ProjectPage() {
                             {/* Galería de Imágenes */}
                             <ProductGallery images={project.images} productName={project.title} />
 
-                            {/* Botón de Descarga - Centrado */}
-                            <div className="flex justify-center">
+                            {/* Rating y Botón de Descarga */}
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                                {/* Calificación */}
+                                <div className="flex items-center p-4 border border-gray-200 rounded-xl bg-white/50">
+                                    <span className="text-xl font-bold text-[#3b3535]">{project.average_rating?.toFixed(1)}</span>
+                                    <div className="flex gap-1 ml-2 mr-2">
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                            <Star
+                                                key={i}
+                                                className={`w-5 h-5 cursor-pointer transition-colors ${
+                                                    (hoverRating || rating || Math.round(project.average_rating)) >= i
+                                                        ? 'fill-[#c1835a] text-[#c1835a]'
+                                                        : 'text-gray-300'
+                                                }`}
+                                                onClick={() => handleRateProject(i)}
+                                                onMouseEnter={() => setHoverRating(i)}
+                                                onMouseLeave={() => setHoverRating(0)}
+                                            />
+                                        ))}
+                                    </div>
+                                    <span className="text-gray-500 text-sm">({project.rating_count} valoraciones)</span>
+                                </div>
+
+                                {/* Botón de Descarga */}
                                 <Button
                                     className="bg-[#656b48] hover:bg-[#3b3535] text-white py-6 text-md font-semibold rounded-xl px-8"
                                     onClick={() => window.open(project.tutorial, '_blank')}
@@ -459,54 +481,6 @@ export default function ProjectPage() {
                                     <Download className="w-5 h-5 mr-2" />
                                     {project.tutorial ? 'Descargar Planos' : 'Planos no disponibles'}
                                 </Button>
-                            </div>
-
-                            {/* Estilos */}
-                            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
-                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Estilos</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {project.style.map((s, i) => (
-                                        <Badge key={i} variant="secondary" className="bg-[#e4d5c5] text-[#9a6a49] text-sm font-medium px-3 py-1">{s}</Badge>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Materiales */}
-                            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
-                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Materiales</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {project.materials.map((m, i) => (
-                                        <Badge key={i} variant="secondary" className="bg-[#e4d5c5] text-[#9a6a49] text-sm font-medium px-3 py-1">{m}</Badge>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Herramientas */}
-                            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
-                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Herramientas</h3>
-                                <div className="flex flex-wrap gap-2">
-                                    {project.tools.map((t, i) => (
-                                        <Badge key={i} variant="secondary" className="bg-[#e4d5c5] text-[#9a6a49] text-sm font-medium px-3 py-1">{t}</Badge>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Tiempo de armado y Ambiente */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
-                                    <h3 className="text-lg font-semibold text-[#3b3535] mb-2">Tiempo de armado</h3>
-                                    <div className="flex items-center">
-                                        <Clock className="w-4 h-4 mr-2 text-[#c1835a]"/>
-                                        <strong className="text-sm">{project.time_to_build} hs</strong>
-                                    </div>
-                                </div>
-                                <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
-                                    <h3 className="text-lg font-semibold text-[#3b3535] mb-2">Ambiente</h3>
-                                    <div className="flex items-center">
-                                        <Home className="w-4 h-4 mr-2 text-[#c1835a]"/>
-                                        <strong className="text-sm">{environmentValue || 'N/A'}</strong>
-                                    </div>
-                                </div>
                             </div>
                         </div>
 
@@ -532,25 +506,64 @@ export default function ProjectPage() {
                                 </div>
                             )}
 
-                            {/* Calificación */}
-                            <div className="flex items-center p-4 mt-2 border border-gray-200 rounded-xl bg-white/50">
-                                <span className="text-xl font-bold text-[#3b3535]">{project.average_rating?.toFixed(1)}</span>
-                                <div className="flex gap-1 ml-2 mr-2">
-                                    {[1, 2, 3, 4, 5].map((i) => (
-                                        <Star
+                            {/* Estilos */}
+                            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Estilos</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {project.style.map((s, i) => (
+                                        <Badge
                                             key={i}
-                                            className={`w-5 h-5 cursor-pointer transition-colors ${
-                                                (hoverRating || rating || Math.round(project.average_rating)) >= i
-                                                    ? 'fill-[#c1835a] text-[#c1835a]'
-                                                    : 'text-gray-300'
-                                            }`}
-                                            onClick={() => handleRateProject(i)}
-                                            onMouseEnter={() => setHoverRating(i)}
-                                            onMouseLeave={() => setHoverRating(0)}
-                                        />
+                                            variant="secondary"
+                                            className="bg-blue-100 text-blue-700 border border-blue-200 text-sm font-medium px-3 py-1 shadow-sm"
+                                        >
+                                            {s}
+                                        </Badge>
                                     ))}
                                 </div>
-                                <span className="text-gray-500 text-sm">({project.rating_count} valoraciones)</span>
+                            </div>
+
+                            {/* Materiales */}
+                            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Materiales</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {project.materials.map((m, i) => (
+                                        <Badge key={i} variant="secondary" className="bg-[#e4d5c5] text-[#9a6a49] text-sm font-medium px-3 py-1">{m}</Badge>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Herramientas */}
+                            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+                                <h3 className="text-lg font-semibold text-[#3b3535] mb-4">Herramientas</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {project.tools.map((t, i) => (
+                                        <Badge
+                                            key={i}
+                                            variant="secondary"
+                                            className="bg-green-100 text-green-700 border border-green-200 text-sm font-medium px-3 py-1 shadow-sm"
+                                        >
+                                            {t}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Tiempo de armado y Ambiente */}
+                            <div className="grid grid-cols-1 gap-4">
+                                <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+                                    <h3 className="text-lg font-semibold text-[#3b3535] mb-2">Tiempo de armado</h3>
+                                    <div className="flex items-center">
+                                        <Clock className="w-4 h-4 mr-2 text-[#c1835a]"/>
+                                        <strong className="text-sm">{project.time_to_build} hs</strong>
+                                    </div>
+                                </div>
+                                <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+                                    <h3 className="text-lg font-semibold text-[#3b3535] mb-2">Ambiente</h3>
+                                    <div className="flex items-center">
+                                        <Home className="w-4 h-4 mr-2 text-[#c1835a]"/>
+                                        <strong className="text-sm">{environmentValue || 'N/A'}</strong>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -595,3 +608,4 @@ export default function ProjectPage() {
         </div>
     );
 }
+
