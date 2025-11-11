@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Plus, Check, Loader2 } from 'lucide-react';
+import { X, Check, Loader2, AlertCircle } from 'lucide-react';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import Image from 'next/image';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
@@ -14,6 +14,29 @@ import { mapFormDataToProject } from '@/app/utils/project-mapper';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import DescriptionEditor from '@/components/form/description-editor';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent,
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable';
+import {
+    ProjectImageManager,
+    TutorialFileUploader
+} from '@/components/form/project-file-uploaders';
+
+export type ImagePreview = {
+  id: string;
+  file: File;
+  preview: string;
+};
 
 type FormData = {
   title: string,
@@ -30,10 +53,16 @@ type FormData = {
   is_public: boolean
 }
 
+const MAX_SIZE_MB = 10;
+const MAX_FILE_SIZE = MAX_SIZE_MB * 1024 * 1024;
+const ALLOWED_IMAGE_TYPE = 'image/jpeg';
+const MAX_IMAGES = 10;
+
 export default function CreateProjectPage() {
     const router = useRouter();
     const { user } = useAuth();
     const { uploadFile, uploadMultipleFiles, uploading } = useFileUpload();
+    
     const [formData, setFormData] = useState<FormData>({
         title: '',
         altura: '',
@@ -49,27 +78,22 @@ export default function CreateProjectPage() {
         is_public: true,
     });
 
-    const [uploadedFiles, setUploadedFiles] = useState({
-        coverImage: null as File | null,
-        images: [] as File[],
-        tutorialFile: null as File | null,
+    const [uploadedFiles, setUploadedFiles] = useState<{
+        coverImage: { file: File | null, preview: string | null },
+        images: ImagePreview[],
+        tutorialFile: File | null,
+    }>({
+        coverImage: { file: null, preview: null },
+        images: [],
+        tutorialFile: null,
     });
 
+    const [imageError, setImageError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
     const handleInputChange = (field: keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas' | 'is_public'>, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value } as FormData));
-    };
-
-    const handleFileUpload = (type: 'coverImage' | 'images' | 'tutorialFile', files: FileList | null) => {
-        if (!files) return;
-
-        if (type === 'coverImage' || type === 'tutorialFile') {
-            setUploadedFiles((prev) => ({ ...prev, [type]: files[0] }));
-        } else if (type === 'images') {
-            setUploadedFiles((prev) => ({ ...prev, images: [...prev.images, ...Array.from(files)] }));
-        }
     };
 
     const estilosOptions = [
@@ -121,6 +145,123 @@ export default function CreateProjectPage() {
         });
     };
 
+    const validateFile = (file: File): string | null => {
+        if (file.type !== ALLOWED_IMAGE_TYPE) {
+            return 'Formato inválido. Solo se permiten imágenes JPG.';
+        }
+        if (file.size > MAX_FILE_SIZE) {
+            return `Archivo demasiado grande. El máximo es ${MAX_SIZE_MB}MB.`;
+        }
+        return null;
+    };
+
+    const handleCoverImageChange = (files: FileList | null) => {
+        setImageError(null);
+        if (uploadedFiles.coverImage.preview) {
+            URL.revokeObjectURL(uploadedFiles.coverImage.preview);
+        }
+        
+        if (!files || files.length === 0) {
+            setUploadedFiles(prev => ({ ...prev, coverImage: { file: null, preview: null }}));
+            return;
+        }
+        
+        const file = files[0];
+        const error = validateFile(file);
+
+        if (error) {
+            setImageError(error);
+            setUploadedFiles(prev => ({ ...prev, coverImage: { file: null, preview: null }}));
+            return;
+        }
+
+        const preview = URL.createObjectURL(file);
+        setUploadedFiles(prev => ({ ...prev, coverImage: { file, preview }}));
+    };
+
+    const handleImagesChange = (files: FileList | null) => {
+        setImageError(null);
+        if (!files) return;
+
+        const newFiles: ImagePreview[] = [];
+        const currentCount = uploadedFiles.images.length;
+
+        if (currentCount + files.length > MAX_IMAGES) {
+            setImageError(`Solo puedes subir un máximo de ${MAX_IMAGES} imágenes.`);
+            return;
+        }
+
+        for (const file of Array.from(files)) {
+            const error = validateFile(file);
+            if (error) {
+                setImageError(error);
+                continue;
+            }
+            newFiles.push({
+                id: `${file.name}-${Date.now()}`,
+                file,
+                preview: URL.createObjectURL(file)
+            });
+        }
+        
+        setUploadedFiles(prev => ({ ...prev, images: [...prev.images, ...newFiles] }));
+    };
+
+    const handleTutorialChange = (files: FileList | null) => {
+        if (files && files.length > 0) {
+            setUploadedFiles(prev => ({ ...prev, tutorialFile: files[0] }));
+        }
+    };
+
+    const removeCoverImage = () => {
+        if (uploadedFiles.coverImage.preview) {
+            URL.revokeObjectURL(uploadedFiles.coverImage.preview);
+        }
+        setUploadedFiles(prev => ({ ...prev, coverImage: { file: null, preview: null }}));
+    };
+
+    const removeImage = (id: string) => {
+        const fileToRemove = uploadedFiles.images.find(img => img.id === id);
+        if (fileToRemove) {
+            URL.revokeObjectURL(fileToRemove.preview);
+        }
+        setUploadedFiles(prev => ({
+            ...prev,
+            images: prev.images.filter(img => img.id !== id)
+        }));
+    };
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+    );
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        if (over && active.id !== over.id) {
+            setUploadedFiles(prev => {
+                const oldIndex = prev.images.findIndex(img => img.id === active.id);
+                const newIndex = prev.images.findIndex(img => img.id === over.id);
+                return {
+                    ...prev,
+                    images: arrayMove(prev.images, oldIndex, newIndex)
+                };
+            });
+        }
+    };
+
+    useEffect(() => {
+        const coverPreview = uploadedFiles.coverImage.preview;
+        const galleryPreviews = uploadedFiles.images.map(img => img.preview);
+        
+        return () => {
+            if (coverPreview) {
+                URL.revokeObjectURL(coverPreview);
+            }
+            galleryPreviews.forEach(preview => URL.revokeObjectURL(preview));
+        };
+    }, [uploadedFiles.coverImage.preview, uploadedFiles.images]);
+
     const handleSubmit = async () => {
         if (!user) {
             setSubmitError('Debes estar autenticado para crear un proyecto');
@@ -137,7 +278,7 @@ export default function CreateProjectPage() {
             return;
         }
 
-        if (!uploadedFiles.coverImage) {
+        if (!uploadedFiles.coverImage.file) {
             setSubmitError('La imagen de portada es obligatoria');
             return;
         }
@@ -148,16 +289,17 @@ export default function CreateProjectPage() {
         try {
             const currentUser = await getCurrentUserFromDB();
             const projectTempId = Date.now().toString();
-      
+    
             const portraitUrl = await uploadFile(
-                uploadedFiles.coverImage,
+                uploadedFiles.coverImage.file,
                 `projects/${projectTempId}/portrait`
             );
 
             let imageUrls: string[] = [];
-            if (uploadedFiles.images.length > 0) {
+            const filesToUpload = uploadedFiles.images.map(img => img.file);
+            if (filesToUpload.length > 0) {
                 imageUrls = await uploadMultipleFiles(
-                    uploadedFiles.images,
+                    filesToUpload,
                     `projects/${projectTempId}/images`
                 );
             }
@@ -170,17 +312,12 @@ export default function CreateProjectPage() {
                 );
             }
 
-            const fileUrls = {
-                portraitUrl,
-                imageUrls,
-                tutorialUrl,
-            };
-
+            const fileUrls = { portraitUrl, imageUrls, tutorialUrl };
             const projectData = mapFormDataToProject(formData, fileUrls, currentUser.id);
             const newProject = await createProject(projectData);
-      
+    
             router.push(`/project/${newProject.id}`);
-      
+    
         } catch (error: unknown) {
             if (error instanceof Error) {
                 setSubmitError(error.message);
@@ -224,7 +361,6 @@ export default function CreateProjectPage() {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                            {/* Altura */}
                             <div>
                                 <label className="block text-sm font-medium text-[#3b3535] mb-2">Altura</label>
                                 <div className="relative">
@@ -234,15 +370,13 @@ export default function CreateProjectPage() {
                                         placeholder="Ej: 45"
                                         value={formData.altura}
                                         onChange={(e) => handleInputChange('altura', e.target.value)}
-                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10" // Padding derecho
+                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
                                     />
                                     <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
-                cm
+                                        cm
                                     </span>
                                 </div>
                             </div>
-
-                            {/* Largo */}
                             <div>
                                 <label className="block text-sm font-medium text-[#3b3535] mb-2">Largo</label>
                                 <div className="relative">
@@ -255,12 +389,10 @@ export default function CreateProjectPage() {
                                         className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
                                     />
                                     <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
-                cm
+                                        cm
                                     </span>
                                 </div>
                             </div>
-
-                            {/* Ancho */}
                             <div>
                                 <label className="block text-sm font-medium text-[#3b3535] mb-2">Ancho</label>
                                 <div className="relative">
@@ -273,17 +405,14 @@ export default function CreateProjectPage() {
                                         className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-10"
                                     />
                                     <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
-                cm
+                                        cm
                                     </span>
                                 </div>
                             </div>
-
-                            {/* Material Principal (este se queda como texto normal) */}
                             <div>
                                 <label className="block text-sm font-medium text-[#3b3535] mb-2">Material principal</label>
                                 <Input
                                     type="text"
-                                    min={0}
                                     placeholder="Ej: Madera de Pino"
                                     value={formData.materialPrincipal}
                                     onChange={(e) => handleInputChange('materialPrincipal', e.target.value)}
@@ -300,55 +429,35 @@ export default function CreateProjectPage() {
                             />
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-[#3b3535] mb-2">Imagen de portada</label>
-                            <div className="border-2 border-dashed border-[#c89c6b] rounded-lg p-8 text-center bg-white/50">
-                                <input type="file" accept="image/*" onChange={(e) => handleFileUpload('coverImage', e.target.files)} className="hidden" id="cover-image-upload" />
-                                <label htmlFor="cover-image-upload" className="cursor-pointer">
-                                    <div className="flex flex-col items-center space-y-2">
-                                        <div className="w-12 h-12 bg-[#c89c6b] rounded-full flex items-center justify-center">
-                                            <Plus className="w-6 h-6 text-white" />
-                                        </div>
-                                        <span className="text-[#3b3535] font-medium">Subir imagen</span>
-                                    </div>
-                                </label>
-                                {uploadedFiles.coverImage && <p className="mt-2 text-sm text-[#656b48]">Archivo seleccionado: {uploadedFiles.coverImage.name}</p>}
-                            </div>
-                        </div>
+                        {/* --- INICIO: SECCIÓN DE IMÁGENES MODIFICADA --- */}
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                            <ProjectImageManager
+                                coverPreview={uploadedFiles.coverImage.preview}
+                                onCoverChange={handleCoverImageChange}
+                                onCoverRemove={removeCoverImage}
+                                
+                                galleryImages={uploadedFiles.images}
+                                onGalleryChange={handleImagesChange}
+                                onGalleryRemove={removeImage}
+                                
+                                maxFiles={MAX_IMAGES}
+                                maxSizeMB={MAX_SIZE_MB}
+                                allowedType={ALLOWED_IMAGE_TYPE}
+                            />
+                        </DndContext>
+                        {/* --- FIN: SECCIÓN DE IMÁGENES MODIFICADA --- */}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Imágenes</label>
-                                <div className="border-2 border-dashed border-[#c89c6b] rounded-lg p-6 text-center bg-white/50">
-                                    <input type="file" accept="image/*" multiple onChange={(e) => handleFileUpload('images', e.target.files)} className="hidden" id="images-upload" />
-                                    <label htmlFor="images-upload" className="cursor-pointer">
-                                        <div className="flex flex-col items-center space-y-2">
-                                            <div className="w-10 h-10 bg-[#c89c6b] rounded-full flex items-center justify-center">
-                                                <Plus className="w-5 h-5 text-white" />
-                                            </div>
-                                            <span className="text-[#3b3535] font-medium text-sm">Subir imágenes</span>
-                                        </div>
-                                    </label>
-                                    {uploadedFiles.images.length > 0 && <p className="mt-2 text-xs text-[#656b48]">{uploadedFiles.images.length} archivo(s) seleccionado(s)</p>}
-                                </div>
-                            </div>
+                        <TutorialFileUploader
+                            file={uploadedFiles.tutorialFile}
+                            onChange={handleTutorialChange}
+                        />
 
-                            <div>
-                                <label className="block text-sm font-medium text-[#3b3535] mb-2">Archivo tutorial</label>
-                                <div className="border-2 border-dashed border-[#c89c6b] rounded-lg p-6 text-center bg-white/50">
-                                    <input type="file" accept=".pdf,.doc,.docx,.txt" onChange={(e) => handleFileUpload('tutorialFile', e.target.files)} className="hidden" id="tutorial-upload" />
-                                    <label htmlFor="tutorial-upload" className="cursor-pointer">
-                                        <div className="flex flex-col items-center space-y-2">
-                                            <div className="w-10 h-10 bg-[#c89c6b] rounded-full flex items-center justify-center">
-                                                <Plus className="w-5 h-5 text-white" />
-                                            </div>
-                                            <span className="text-[#3b3535] font-medium text-sm">Subir archivo</span>
-                                        </div>
-                                    </label>
-                                    {uploadedFiles.tutorialFile && <p className="mt-2 text-xs text-[#656b48]">Archivo seleccionado: {uploadedFiles.tutorialFile.name}</p>}
-                                </div>
+                        {imageError && (
+                            <div className="flex items-center p-3 rounded-md bg-red-50 border border-red-200">
+                                <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                                <p className="text-sm text-red-700">{imageError}</p>
                             </div>
-                        </div>
+                        )}
 
                         {[
                             { key: 'estilos', label: 'Estilos', options: estilosOptions },
@@ -359,7 +468,7 @@ export default function CreateProjectPage() {
                                 <label className="block text-sm font-medium text-[#3b3535] mb-2">{label}</label>
                                 <Select onValueChange={(val) => handleMultiSelect(key as 'estilos' | 'materiales' | 'herramientas', val)}>
                                     <SelectTrigger className="w-full border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]">
-                    Selecciona {label.toLowerCase()}
+                                        Selecciona {label.toLowerCase()}
                                     </SelectTrigger>
                                     <SelectContent>
                                         {options.map((opt) => (
@@ -397,10 +506,10 @@ export default function CreateProjectPage() {
                                         placeholder="Ej: 4"
                                         value={formData.tiempoArmado}
                                         onChange={(e) => handleInputChange('tiempoArmado', e.target.value)}
-                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-12" // Padding derecho
+                                        className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b] pr-12"
                                     />
                                     <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-500">
-            horas
+                                        horas
                                     </span>
                                 </div>
                             </div>
