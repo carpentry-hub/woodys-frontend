@@ -12,7 +12,7 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ open, onClose }: LoginModalProps) {
-    const { loginWithGoogle, loginWithEmail, registerWithEmail } = useAuth();
+    const { loginWithGoogle, registerWithEmail } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isRegister, setIsRegister] = useState(false);
@@ -27,8 +27,6 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
         try {
             if (isRegister) {
                 await registerWithEmail(email, password);
-            } else {
-                await loginWithEmail(email, password);
             }
             onClose();
         } catch (error: unknown) {
