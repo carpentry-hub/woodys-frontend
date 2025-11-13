@@ -24,6 +24,7 @@ export function useAuth() {
     }, []);
 
     const fetchAppUserData = useCallback(async (firebaseUser: FirebaseUser) => {
+        setLoading(true);
         try {
             const userFromDb = await getUserByFirebaseUid(firebaseUser.uid);
             setAppUser(userFromDb);
@@ -43,12 +44,13 @@ export function useAuth() {
             } else {
                 localStorage.removeItem(PROFILE_PIC_URL_KEY);
             }
-            return userFromDb; 
+            return userFromDb;
         } catch (err) {
             console.error('Error fetching app user data:', err);
-            setError('Error al cargar datos del perfil.');
             clearUserData();
-            throw err; 
+            throw err;
+        } finally {
+            setLoading(false);
         }
     }, [clearUserData]);
 
@@ -57,7 +59,6 @@ export function useAuth() {
             setUser(firebaseUser);
             if (firebaseUser) {
                 setLoading(true);
-                
                 const storedUser = localStorage.getItem(APP_USER_KEY);
                 const storedPicUrl = localStorage.getItem(PROFILE_PIC_URL_KEY);
                 let isCacheValid = false;
@@ -72,7 +73,7 @@ export function useAuth() {
                         }
                     } catch (e) {
                         console.error('Error parsing cached user', e);
-                        clearUserData(); 
+                        clearUserData();
                     }
                 }
                 
@@ -93,10 +94,9 @@ export function useAuth() {
         return () => unsubscribe();
     }, [fetchAppUserData, clearUserData]);
 
-
-    useCallback(async (firebaseUser: FirebaseUser) => {
+    const ensureUserInDB = useCallback(async (firebaseUser: FirebaseUser) => {
         try {
-            return await fetchAppUserData(firebaseUser); 
+            return await fetchAppUserData(firebaseUser);
         } catch (err) {
             console.log(err,'Usuario no encontrado en DB, creando...');
             const userData: Partial<AppUser> = {
@@ -122,7 +122,8 @@ export function useAuth() {
         setError(null);
         setLoading(true);
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            const cred = await signInWithEmailAndPassword(auth, email, password);
+            await ensureUserInDB(cred.user);
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -131,13 +132,14 @@ export function useAuth() {
             }
             throw new Error('An unknown error occurred during email login.');
         }
-    }, []);
+    }, [ensureUserInDB]);
 
     const registerWithEmail = useCallback(async (email: string, password: string) => {
         setError(null);
         setLoading(true);
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            const cred = await createUserWithEmailAndPassword(auth, email, password);
+            await ensureUserInDB(cred.user);
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -146,14 +148,15 @@ export function useAuth() {
             }
             throw new Error('An unknown error occurred during email registration.');
         }
-    }, []);
+    }, [ensureUserInDB]);
 
     const loginWithGoogle = useCallback(async () => {
         setError(null);
         setLoading(true);
         try {
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider);
+            const cred = await signInWithPopup(auth, provider);
+            await ensureUserInDB(cred.user);
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -161,7 +164,7 @@ export function useAuth() {
             setLoading(false);
             throw new Error('An unknown error occurred during Google login.');
         }
-    }, []);
+    }, [ensureUserInDB]);
 
     const logout = useCallback(async () => {
         setError(null);
