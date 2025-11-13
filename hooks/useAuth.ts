@@ -185,6 +185,7 @@ export function useAuth() {
         login: loginWithEmail, 
         loginWithGoogle, 
         logout, 
-        registerWithEmail 
+        registerWithEmail,
+        fetchAppUserData
     };
 }
