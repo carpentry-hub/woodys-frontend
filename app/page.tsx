@@ -1,8 +1,6 @@
 'use client';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Users, Award, TrendingUp, Heart, ArrowRight, Star } from 'lucide-react';
+import { Plus, Users, Award, TrendingUp, ArrowRight, Star, FolderOpen, Download } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -11,6 +9,7 @@ import CarouselSide from '@/components/carousel-side';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import FeaturedCategory from '@/components/featured-category';
 
 export default function LandingPage() {
     useAuth();
@@ -74,7 +73,7 @@ export default function LandingPage() {
                         </Link>
                     </div>
 
-                    {/* Community Stats */}
+                    {/* --- Community Stats Mejoradas --- */}
                     <motion.div
                         ref={statsRef}
                         initial={{ opacity: 0, y: 40 }}
@@ -82,21 +81,40 @@ export default function LandingPage() {
                         transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
                         className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mb-12 sm:mb-16 px-4"
                     >
-                        <div className="text-center bg-white rounded-lg p-4 sm:p-6 shadow-sm">
-                            <div className="text-2xl sm:text-4xl font-bold text-[#c1835a] mb-1 sm:mb-2">12.5K+</div>
-                            <div className="text-sm sm:text-base text-[#676765]">Proyectos</div>
+                        {/* Card 1: Proyectos */}
+                        <div className="text-center bg-white rounded-lg p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                            <div className="w-14 h-14 bg-[#656b48]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <FolderOpen className="w-7 h-7 text-[#656b48]" />
+                            </div>
+                            <div className="text-3xl font-bold text-[#3b3535] mb-1">12.5K+</div>
+                            <div className="text-base text-[#676765]">Proyectos</div>
                         </div>
-                        <div className="text-center bg-white rounded-lg p-4 sm:p-6 shadow-sm">
-                            <div className="text-2xl sm:text-4xl font-bold text-[#c1835a] mb-1 sm:mb-2">8.2K+</div>
-                            <div className="text-sm sm:text-base text-[#676765]">Makers</div>
+
+                        {/* Card 2: Makers */}
+                        <div className="text-center bg-white rounded-lg p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                            <div className="w-14 h-14 bg-[#c1835a]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Users className="w-7 h-7 text-[#c1835a]" />
+                            </div>
+                            <div className="text-3xl font-bold text-[#3b3535] mb-1">8.2K+</div>
+                            <div className="text-base text-[#676765]">Makers</div>
                         </div>
-                        <div className="text-center bg-white rounded-lg p-4 sm:p-6 shadow-sm">
-                            <div className="text-2xl sm:text-4xl font-bold text-[#c1835a] mb-1 sm:mb-2">45K+</div>
-                            <div className="text-sm sm:text-base text-[#676765]">Descargas</div>
+
+                        {/* Card 3: Descargas */}
+                        <div className="text-center bg-white rounded-lg p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                            <div className="w-14 h-14 bg-[#c89c6b]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Download className="w-7 h-7 text-[#c89c6b]" />
+                            </div>
+                            <div className="text-3xl font-bold text-[#3b3535] mb-1">45K+</div>
+                            <div className="text-base text-[#676765]">Descargas</div>
                         </div>
-                        <div className="text-center bg-white rounded-lg p-4 sm:p-6 shadow-sm">
-                            <div className="text-2xl sm:text-4xl font-bold text-[#c1835a] mb-1 sm:mb-2">98%</div>
-                            <div className="text-sm sm:text-base text-[#676765]">Satisfacción</div>
+
+                        {/* Card 4: Satisfacción */}
+                        <div className="text-center bg-white rounded-lg p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+                            <div className="w-14 h-14 bg-[#c1835a]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Star className="w-7 h-7 text-[#c1835a]" />
+                            </div>
+                            <div className="text-3xl font-bold text-[#3b3535] mb-1">98%</div>
+                            <div className="text-base text-[#676765]">Satisfacción</div>
                         </div>
                     </motion.div>
 
@@ -195,7 +213,7 @@ export default function LandingPage() {
                         </div>
                     </div>
 
-                    <div className="text-center px-4">
+                    <div className="text-center px-4 flex justify-center">
                         <Link href="/my-projects">
                             <Button className="w-full sm:w-auto bg-[#656b48] hover:bg-[#3b3535] text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full flex items-center justify-center space-x-2">
                                 <Plus className="w-5 h-5" />
@@ -207,6 +225,7 @@ export default function LandingPage() {
             </motion.section>
 
             {/* Featured Creators Section */}
+            {/* --- Featured Creators Section / CTA --- */}
             <motion.section
                 ref={creatorsRef}
                 initial={{ opacity: 0, y: 40 }}
@@ -215,114 +234,76 @@ export default function LandingPage() {
                 className="py-12 sm:py-16"
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                    <div className="text-center mb-8 sm:mb-12">
-                        <h2 className="text-3xl sm:text-4xl font-bold text-[#3b3535] mb-4">Creadores destacados del mes</h2>
-                        <p className="text-lg sm:text-xl text-[#676765]">
-              Conoce a los makers que están inspirando a nuestra comunidad
-                        </p>
-                    </div>
+                    {/* Envolvemos todo en una tarjeta blanca para destacarla del fondo beige */}
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden p-8 md:p-12">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 items-center">
+                
+                            {/* Columna 1: Texto y CTA */}
+                            <div className="text-center lg:text-left">
+                                <h2 className="text-3xl sm:text-4xl font-bold text-[#3b3535] mb-4">
+                        ¿Quieres ser el próximo Creador Destacado?
+                                </h2>
+                                <p className="text-base sm:text-lg text-[#676765] mb-8">
+                        Al publicar tu proyecto, no solo compartes tu trabajo, sino que inspiras a miles de otros makers. Construye tu reputación y conviértete en una parte fundamental de nuestra comunidad.
+                                </p>
+                                <Link href="/create-project">
+                                    <Button className="w-full sm:w-auto bg-[#c1835a] hover:bg-[#3b3535] text-white px-6 sm:px-8 py-3 rounded-full text-base font-semibold">
+                            Publica tu proyecto ahora
+                                    </Button>
+                                </Link>
+                            </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-8 sm:mb-12">
-                        {[
-                            { name: 'Priscila Della Vecchia', projects: 24, followers: '1.2K', badge: 'Experta en Nórdico' },
-                            { name: 'Carlos Mendoza', projects: 18, followers: '890', badge: 'Maestro Vintage' },
-                            { name: 'Ana García', projects: 31, followers: '2.1K', badge: 'Innovadora Sustentable' },
-                        ].map((creator, index) => (
-                            <div key={index} className="bg-white rounded-lg p-4 sm:p-6 text-center shadow-sm">
-                                <Avatar className="w-16 sm:w-20 h-16 sm:h-20 mx-auto mb-4">
-                                    <AvatarImage src="/placeholder.svg?height=80&width=80" />
-                                    <AvatarFallback className="text-lg sm:text-xl">
-                                        {creator.name
-                                            .split(' ')
-                                            .map((n) => n[0])
-                                            .join('')}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <h3 className="text-lg sm:text-xl font-semibold text-[#3b3535] mb-2">{creator.name}</h3>
-                                <Badge className="bg-[#656b48] text-white mb-3 text-xs sm:text-sm">{creator.badge}</Badge>
-                                <div className="flex justify-center space-x-4 sm:space-x-6 text-sm">
-                                    <div>
-                                        <div className="font-semibold text-[#3b3535]">{creator.projects}</div>
-                                        <div className="text-[#676765]">Proyectos</div>
-                                    </div>
-                                    <div>
-                                        <div className="font-semibold text-[#3b3535]">{creator.followers}</div>
-                                        <div className="text-[#676765]">Seguidores</div>
-                                    </div>
+                            {/* Columna 2: Collage de Imágenes */}
+                            <div className="grid grid-cols-2 gap-4 h-64 md:h-80">
+                                {/* Imagen 1 (Vertical) */}
+                                <div className="col-span-1 row-span-2 rounded-lg overflow-hidden">
+                                    <Image
+                                        src="/landing/torre-gato.jpeg"
+                                        alt="Proyecto de carpintería vertical"
+                                        width={300}
+                                        height={600}
+                                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                                    />
+                                </div>
+                                {/* Imagen 2 (Cuadrada) */}
+                                <div className="col-span-1 row-span-1 rounded-lg overflow-hidden">
+                                    <Image
+                                        src="/landing/plano-gato.jpg"
+                                        alt="Detalle de carpintería"
+                                        width={150}
+                                        height={300}
+                                        className="w-full h-full object-contain transition-transform duration-300 hover:scale-105"
+                                    />
+                                </div>
+                                {/* Imagen 3 (Cuadrada) */}
+                                <div className="col-span-1 row-span-1 rounded-lg overflow-hidden">
+                                    <Image
+                                        src="/landing/carpintero.jpg"
+                                        alt="Herramientas de carpintería"
+                                        width={300}
+                                        height={300}
+                                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                                    />
                                 </div>
                             </div>
-                        ))}
-                    </div>
-
-                    <div className="text-center px-4">
-                        <p className="text-base sm:text-lg text-[#676765] mb-4">¿Quieres ser el próximo creador destacado?</p>
-                        <Link href="/my-projects">
-                            <Button className="w-full sm:w-auto bg-[#c1835a] hover:bg-[#3b3535] text-white px-6 sm:px-8 py-3 rounded-full">
-                Publica tu proyecto ahora
-                            </Button>
-                        </Link>
+                
+                        </div>
                     </div>
                 </div>
             </motion.section>
-
             {/* Projects Sections */}
-            {['Estilo japandi', 'Estilo vintage'].map((sectionTitle, sectionIndex) => (
-                <section key={sectionIndex} className="py-8 sm:py-16">
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6">
-                        <div className="flex justify-between items-center mb-6 sm:mb-8">
-                            <h2 className="text-2xl sm:text-3xl font-bold text-[#3b3535]">{sectionTitle}</h2>
-                            <Link
-                                href="/explorer"
-                                className="text-[#c1835a] font-medium hover:underline flex items-center space-x-1 text-sm sm:text-base"
-                            >
-                                <span>Ver todos</span>
-                                <ArrowRight className="w-4 h-4" />
-                            </Link>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                            {[1, 2, 3, 4].map((projectIndex) => (
-                                <Link key={projectIndex} href="/project" className="group">
-                                    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all">
-                                        <div className="aspect-square relative overflow-hidden">
-                                            <Image
-                                                src="/placeholder.svg?height=250&width=250"
-                                                alt="Biblioteca En Madera Maciza"
-                                                width={250}
-                                                height={250}
-                                                className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                            <div className="absolute top-3 right-3 bg-white/90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <Heart className="w-4 h-4 text-[#c1835a]" />
-                                            </div>
-                                        </div>
-                                        <div className="p-3 sm:p-4">
-                                            <h3 className="font-semibold text-[#3b3535] mb-2 text-sm sm:text-base">
-                        Biblioteca En Madera Maciza
-                                            </h3>
-                                            <div className="flex items-center space-x-2 mb-2">
-                                                <span className="text-base sm:text-lg font-bold text-[#3b3535]">4.99</span>
-                                                <Star className="w-3 sm:w-4 h-3 sm:h-4 fill-[#c1835a] text-[#c1835a]" />
-                                                <span className="text-xs sm:text-sm text-[#676765]">• 3.4K descargas</span>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <Avatar className="w-5 sm:w-6 h-5 sm:h-6">
-                                                    <AvatarFallback className="text-xs">PV</AvatarFallback>
-                                                </Avatar>
-                                                <div className="text-xs text-[#676765]">
-                                                    <div>Priscila Della Vecchia</div>
-                                                    <div className="text-[#c1835a]">Ver workshop</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </Link>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-            ))}
-
+            <FeaturedCategory
+                title="Estilo Japandi"
+                filterKey="style"
+                filterValue="japandi"
+            />
+            
+            <FeaturedCategory
+                title="Estilo Vintage"
+                filterKey="style"
+                filterValue="vintage"
+            />
+            
             {/* Final CTA Section */}
             <section className="bg-[#656b48] py-12 sm:py-16">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">

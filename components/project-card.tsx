@@ -1,34 +1,79 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Star, Loader2, Eye, EyeOff, Bookmark } from 'lucide-react'; // Importar Bookmark
+import { Star, Loader2, Bookmark, Eye, EyeOff, Clock } from 'lucide-react';
 import { Project } from '@/models/project';
 import { User } from '@/models/user';
+import { getUser, getUserProfilePictureUrl } from '@/app/services/users';
+import { ProjectWithUser } from '@/models/project-with-user'; // Importar el tipo enriquecido
 
 interface ProjectCardProps {
-  project: Project;
-  author: User | null;
-  authorImage?: string | null;
+  project: Project | ProjectWithUser; // Aceptar ambos tipos
   href?: string;
   isOwner?: boolean;
   onVisibilityChange?: (projectId: number, isPublic: boolean) => void;
   isChangingVisibility?: boolean;
-  onSaveClick?: (projectId: number) => void; // Prop para abrir el modal
+  onSaveClick?: (projectId: number) => void;
+  author?: User | null; // Dejar las props opcionales por si las usas
+  authorImage?: string | null;
 }
 
 export default function ProjectCard({ 
     project, 
-    author, 
-    authorImage, 
     href, 
     isOwner = false, 
     onVisibilityChange,
     isChangingVisibility = false,
-    onSaveClick // Recibimos la nueva prop
+    onSaveClick,
 }: ProjectCardProps) {
+
+    const [author, setAuthor] = useState<User | null>(null);
+    const [authorImage, setAuthorImage] = useState<string | null>(null);
+    const [authorLoading, setAuthorLoading] = useState(true);
+
+    useEffect(() => {
+        setAuthorLoading(true);
+        setAuthor(null);
+        setAuthorImage(null);
+
+        const fetchAuthorData = async (ownerId: number) => {
+            try {
+                const userData = await getUser(ownerId);
+                setAuthor(userData);
+                if (userData.profile_picture && userData.profile_picture > 1) {
+                    const imageUrl = await getUserProfilePictureUrl(userData.profile_picture);
+                    setAuthorImage(imageUrl);
+                }
+            } catch (err) {
+                console.error('[ProjectCard] Error cargando autor:', err);
+                setAuthor(null);
+            } finally {
+                setAuthorLoading(false);
+            }
+        };
+
+        if (project.owner) {
+            if (typeof project.owner === 'number') {
+                fetchAuthorData(project.owner);
+            } else if (typeof project.owner === 'object' && 'id' in project.owner) {
+                const user = project.owner as User;
+                setAuthor(user);
+                if (user.profile_picture && user.profile_picture > 1) {
+                    getUserProfilePictureUrl(user.profile_picture)
+                        .then(url => setAuthorImage(url))
+                        .finally(() => setAuthorLoading(false));
+                } else {
+                    setAuthorLoading(false);
+                }
+            }
+        } else {
+            setAuthorLoading(false);
+        }
+    }, [project.owner]);
 
     const displayRating = (project.average_rating ?? 0) > 0
         ? project.average_rating.toFixed(1)
@@ -42,7 +87,6 @@ export default function ProjectCard({
         }
     };
 
-    // Handler para el botón de guardar
     const handleSave = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
@@ -57,7 +101,7 @@ export default function ProjectCard({
             href={href || `/project/${project.id}`}
             className="group"
         >
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative">
+            <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1 h-full flex flex-col relative">
                 
                 {isOwner && (
                     <button
@@ -76,17 +120,15 @@ export default function ProjectCard({
                     </button>
                 )}
 
-                <div className="aspect-square relative overflow-hidden">
+                <div className="aspect-[4/3] relative overflow-hidden">
                     <Image
-                        src={project.portrait || '/placeholder.svg'}
+                        src={project.portrait || (project.images && project.images[0]) || 'https://placehold.co/400x300/f2f0eb/3b3535?text=Woody\'s'}
                         alt={project.title}
-                        width={300}
+                        width={400}
                         height={300}
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                     />
 
-                    {/* --- BLOQUE MODIFICADO --- */}
-                    {/* Se muestra si onSaveClick existe (es decir, si el usuario está logueado) */}
                     {onSaveClick && (
                         <button
                             onClick={handleSave}
@@ -96,47 +138,54 @@ export default function ProjectCard({
                             <Bookmark className="w-4 h-4 text-[#3b3535] group-hover:text-[#c1835a]" />
                         </button>
                     )}
-                    {/* --- FIN DEL BLOQUE --- */}
-
-
+                    
                     {project.time_to_build > 0 && (
                         <div className="absolute bottom-3 left-3">
                             <Badge className="text-xs bg-[#f3f0eb] text-[#c89c6b]">
-                                {project.time_to_build} horas
+                                {project.time_to_build} hs
                             </Badge>
                         </div>
                     )}
                 </div>
-
-                <div className="p-4">
-                    <h3 className="font-semibold text-[#3b3535] mb-2 text-sm group-hover:text-[#c1835a] transition-colors truncate">
+                
+                <div className="p-4 flex flex-col flex-grow">
+                    <div className="flex items-center justify-between mb-2">
+                        <div className="flex flex-wrap gap-1">
+                            {project.style && project.style[0] && (
+                                <Badge className="text-xs bg-[#656b48]/20 text-[#3b3535] border border-[#656b48]/30">
+                                    {project.style[0]}
+                                </Badge>
+                            )}
+                        </div>
+                        <div className="flex items-center space-x-1 text-gray-500 text-sm">
+                            <Clock className="w-3 h-3" />
+                            <span>{project.time_to_build} hs</span>
+                        </div>
+                    </div>
+                    <h3 className="font-bold text-[#3b3535] mb-2 text-md group-hover:text-[#c1835a] transition-colors flex-grow">
                         {project.title}
                     </h3>
-
-                    <div className="flex items-center space-x-2 mb-3">
-                        <span className="text-lg font-bold text-[#3b3535]">
-                            {displayRating}
-                        </span>
-                        <Star className={`w-4 h-4 text-[#c1835a] ${
-                            (project.average_rating ?? 0) > 0
-                                ? 'fill-[#c1835a]'
-                                : 'fill-none'
-                        }`} />
-                    </div>
-
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center space-x-2">
-                            <Avatar className="w-5 h-5">
+                            <Avatar className="w-6 h-6">
                                 <AvatarImage src={authorImage || undefined} />
                                 <AvatarFallback className="text-xs bg-[#f6f6f6]">
-                                    {author?.username?.[0]?.toUpperCase() || 'A'}
+                                    {authorLoading 
+                                        ? <Loader2 className="w-4 h-4 animate-spin" />
+                                        : (author?.username?.[0]?.toUpperCase() || 'U')
+                                    }
                                 </AvatarFallback>
                             </Avatar>
-                            <div className="text-xs text-[#676765]">
-                                <div className="font-medium">
-                                    {author?.username || 'Anónimo'}
-                                </div>
-                            </div>
+                            <span className="text-sm text-gray-500">
+                                {authorLoading 
+                                    ? 'Cargando...'
+                                    : (author?.username || 'Anónimo')
+                                }
+                            </span>
+                        </div>
+                        <div className="flex items-center space-x-1 text-sm text-gray-500">
+                            <Star className={`w-4 h-4 text-[#c1835a] ${ (project.average_rating ?? 0) > 0 ? 'fill-[#c1835a]' : 'fill-none' }`} />
+                            <span>{displayRating} ({project.rating_count})</span>
                         </div>
                     </div>
                 </div>
