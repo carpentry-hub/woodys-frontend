@@ -136,7 +136,7 @@ export default function ExplorerPage() {
                     <div className="text-center mb-12">
                         <h1 className="text-4xl font-bold text-[#3b3535] mb-4">Descubre tu próximo proyecto</h1>
                         <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-                            Explora miles de proyectos creados por nuestra comunidad de makers.
+                            Explora miles de proyectos creados por nuestra comunidad de carpinteros.
                         </p>
                         <div className="relative max-w-2xl mx-auto">
                             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -207,7 +207,7 @@ export default function ExplorerPage() {
                     <section className="my-20 bg-gradient-to-r from-[#656b48] to-[#3b3535] rounded-2xl p-12 text-center text-white">
                         <h2 className="text-3xl font-bold mb-4">¿Tienes una idea en mente?</h2>
                         <p className="text-xl mb-8 opacity-90">
-                            Únete a nuestra comunidad y comparte tu próximo proyecto con miles de makers.
+                            Únete a nuestra comunidad y comparte tu próximo proyecto con miles de carpinteros.
                         </p>
                         <Link href="/my-projects">
                             <Button className="bg-white text-[#656b48] hover:bg-gray-100 px-8 py-3 text-lg font-semibold rounded-full">

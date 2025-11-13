@@ -1,23 +1,23 @@
 'use client';
 import { Button } from '@/components/ui/button';
-import { Plus, Users, Award, TrendingUp, ArrowRight, Star, FolderOpen, Download } from 'lucide-react';
+import { Plus, Users, Award, TrendingUp, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-
 import { ResponsiveHeader } from '@/components/responsive-header';
 import CarouselSide from '@/components/carousel-side';
 import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import FeaturedCategory from '@/components/featured-category';
+import { CommunityStats } from '@/components/landing/community-stats';
 
 export default function LandingPage() {
     useAuth();
     // Animation hooks for each section
     const [heroRef, heroInView] = useInView({ triggerOnce: true, threshold: 0.2 });
-    const [statsRef, statsInView] = useInView({ triggerOnce: true, threshold: 0.2 });
     const [whyRef, whyInView] = useInView({ triggerOnce: true, threshold: 0.2 });
     const [creatorsRef, creatorsInView] = useInView({ triggerOnce: true, threshold: 0.2 });
+    const [finalRef, finalInView] = useInView({ triggerOnce: true, threshold: 0.2 });
 
     return (
         <div className="min-h-screen bg-[#f2f0eb]">
@@ -73,50 +73,8 @@ export default function LandingPage() {
                         </Link>
                     </div>
 
-                    {/* --- Community Stats Mejoradas --- */}
-                    <motion.div
-                        ref={statsRef}
-                        initial={{ opacity: 0, y: 40 }}
-                        animate={statsInView ? { opacity: 1, y: 0 } : {}}
-                        transition={{ duration: 0.7, delay: 0.1, ease: 'easeOut' }}
-                        className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8 mb-12 sm:mb-16 px-4"
-                    >
-                        {/* Card 1: Proyectos */}
-                        <div className="text-center bg-white rounded-lg p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                            <div className="w-14 h-14 bg-[#656b48]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <FolderOpen className="w-7 h-7 text-[#656b48]" />
-                            </div>
-                            <div className="text-3xl font-bold text-[#3b3535] mb-1">12.5K+</div>
-                            <div className="text-base text-[#676765]">Proyectos</div>
-                        </div>
-
-                        {/* Card 2: Makers */}
-                        <div className="text-center bg-white rounded-lg p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                            <div className="w-14 h-14 bg-[#c1835a]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Users className="w-7 h-7 text-[#c1835a]" />
-                            </div>
-                            <div className="text-3xl font-bold text-[#3b3535] mb-1">8.2K+</div>
-                            <div className="text-base text-[#676765]">Makers</div>
-                        </div>
-
-                        {/* Card 3: Descargas */}
-                        <div className="text-center bg-white rounded-lg p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                            <div className="w-14 h-14 bg-[#c89c6b]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Download className="w-7 h-7 text-[#c89c6b]" />
-                            </div>
-                            <div className="text-3xl font-bold text-[#3b3535] mb-1">45K+</div>
-                            <div className="text-base text-[#676765]">Descargas</div>
-                        </div>
-
-                        {/* Card 4: Satisfacción */}
-                        <div className="text-center bg-white rounded-lg p-6 shadow-sm transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-                            <div className="w-14 h-14 bg-[#c1835a]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <Star className="w-7 h-7 text-[#c1835a]" />
-                            </div>
-                            <div className="text-3xl font-bold text-[#3b3535] mb-1">98%</div>
-                            <div className="text-base text-[#676765]">Satisfacción</div>
-                        </div>
-                    </motion.div>
+                    {/* Community Stats */}
+                    <CommunityStats />
 
                     {/* Hero Image with Interactive Elements */}
                     <div className="relative bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-xl mb-12 sm:mb-16 mx-4 sm:mx-0">
@@ -184,7 +142,7 @@ export default function LandingPage() {
                     <div className="text-center mb-8 sm:mb-12">
                         <h2 className="text-3xl sm:text-4xl font-bold text-[#3b3535] mb-4">¿Por qué publicar tus proyectos?</h2>
                         <p className="text-lg sm:text-xl text-[#676765] max-w-3xl mx-auto">
-              Comparte tu pasión por la carpintería y ayuda a otros makers mientras construyes tu reputación
+              Comparte tu pasión por la carpintería y ayuda a otros carpinteros mientras construyes tu reputación
                         </p>
                     </div>
 
@@ -234,9 +192,9 @@ export default function LandingPage() {
             {/* Featured Creators Section */}
             {/* --- Featured Creators Section / CTA --- */}
             <motion.section
-                ref={whyRef}
+                ref={creatorsRef}
                 initial={{ opacity: 0, y: 40 }}
-                animate={whyInView ? { opacity: 1, y: 0 } : {}}
+                animate={creatorsInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, ease: 'easeOut' }}
                 className="py-12 sm:py-16"
             >
@@ -251,7 +209,7 @@ export default function LandingPage() {
                         ¿Quieres ser el próximo Creador Destacado?
                                 </h2>
                                 <p className="text-base sm:text-lg text-[#676765] mb-8">
-                        Al publicar tu proyecto, no solo compartes tu trabajo, sino que inspiras a miles de otros makers. Construye tu reputación y conviértete en una parte fundamental de nuestra comunidad.
+                        Al publicar tu proyecto, no solo compartes tu trabajo, sino que inspiras a miles de otros carpinteros. Construye tu reputación y conviértete en una parte fundamental de nuestra comunidad.
                                 </p>
                                 <Link href="/create-project">
                                     <Button className="w-full sm:w-auto bg-[#c1835a] hover:bg-[#3b3535] text-white px-6 sm:px-8 py-3 rounded-full text-base font-semibold">
@@ -311,9 +269,9 @@ export default function LandingPage() {
                 filterValue="vintage"
             />
             <motion.section
-                ref={creatorsRef}
+                ref={finalRef}
                 initial={{ opacity: 0, y: 40 }}
-                animate={creatorsInView ? { opacity: 1, y: 0 } : {}}
+                animate={finalInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, ease: 'easeOut' }}
             >
                 {/* Final CTA Section */}

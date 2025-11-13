@@ -316,7 +316,7 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                         <p className="text-xs text-[#676765]">
                             © 2025 Woody&lsquo;s Workshop
                             <br />
-                            Hecho con ❤️ para makers
+                            Hecho con ❤️ para carpinteros
                         </p>
                     </div>
                 </div>
