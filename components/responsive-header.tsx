@@ -6,11 +6,10 @@ import { useAuthContext } from '../contexts/AuthContext'; // Importamos useAuthC
 import LoginModal from '@/components/login-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, Bell, Menu, X, Home, FolderOpen, Heart, User, ChevronDown, Loader2 } from 'lucide-react';
+import { Search, Menu, X, Home, FolderOpen, Heart, User, ChevronDown, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { NotificationsDropdown } from '@/components/notifications-dropdown';
 
 interface ResponsiveHeaderProps {
     onCreateProject?: () => void
@@ -18,7 +17,6 @@ interface ResponsiveHeaderProps {
 
 export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
     const pathname = usePathname();
 
@@ -140,18 +138,6 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                             >
                                 <Search className="w-5 h-5 text-[#3d3d3d]" />
                             </button>
-
-                            <div className="relative">
-                                <button
-                                    onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                                    className="p-2 hover:bg-[#f6f6f6] rounded-full transition-colors relative"
-                                    aria-label="Notifications"
-                                >
-                                    <Bell className="w-5 h-5 text-[#3d3d3d]" />
-                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></div>
-                                </button>
-                                <NotificationsDropdown isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
-                            </div>
 
                             {loading ? (
                                 <Loader2 className="w-6 h-6 animate-spin text-[#c1835a] sm:block" />
