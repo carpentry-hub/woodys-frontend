@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Star, Heart } from 'lucide-react';
+import { Star, Heart, Loader2, Eye, EyeOff } from 'lucide-react';
 import { Project } from '@/models/project';
 import { User } from '@/models/user';
 
@@ -13,13 +13,32 @@ interface ProjectCardProps {
   author: User | null;
   authorImage?: string | null;
   href?: string;
+  isOwner?: boolean;
+  onVisibilityChange?: (projectId: number, isPublic: boolean) => void;
+  isChangingVisibility?: boolean;
 }
 
-export default function ProjectCard({ project, author, authorImage, href }: ProjectCardProps) {
+export default function ProjectCard({ 
+    project, 
+    author, 
+    authorImage, 
+    href, 
+    isOwner = false, 
+    onVisibilityChange,
+    isChangingVisibility = false 
+}: ProjectCardProps) {
 
     const displayRating = (project.average_rating ?? 0) > 0
         ? project.average_rating.toFixed(1)
         : '-';
+
+    const handleToggleVisibility = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onVisibilityChange) {
+            onVisibilityChange(project.id, !project.is_public);
+        }
+    };
 
     return (
         <Link
@@ -27,7 +46,25 @@ export default function ProjectCard({ project, author, authorImage, href }: Proj
             href={href || `/project/${project.id}`}
             className="group"
         >
-            <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 relative">
+                
+                {isOwner && (
+                    <button
+                        onClick={handleToggleVisibility}
+                        disabled={isChangingVisibility}
+                        className="absolute top-3 left-3 bg-black/50 text-white rounded-full p-2 z-10 opacity-70 group-hover:opacity-100 transition-opacity hover:bg-black/70"
+                        title={project.is_public ? 'Cambiar a Privado' : 'Cambiar a Público'}
+                    >
+                        {isChangingVisibility ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : project.is_public ? (
+                            <Eye className="w-4 h-4" />
+                        ) : (
+                            <EyeOff className="w-4 h-4" />
+                        )}
+                    </button>
+                )}
+
                 <div className="aspect-square relative overflow-hidden">
                     <Image
                         src={project.portrait || '/placeholder.svg'}
