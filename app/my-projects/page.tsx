@@ -6,10 +6,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Grid3X3, List, Filter, Eye, Target, Loader2 } from 'lucide-react';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { useAuth } from '../../hooks/useAuth';
-import { getUserProjects } from '../services/users';
+import { getUserProjects } from '../services/users'; // Asumo que updateProject está en services/users o projects
 import { Project } from '@/models/project';
 import ProjectCard from '@/components/project-card';
 import { useRouter } from 'next/navigation';
+import SaveToListModal from '@/components/save-to-list-modal'; // Importar el Modal
 import { updateProject } from '../services/projects';
 
 export default function MyProjectsPage() {
@@ -20,6 +21,9 @@ export default function MyProjectsPage() {
     const [privateProjects, setPrivateProjects] = useState<Project[]>([]);
     const [loading, setLoading] = useState(true);
     const [updatingProjectId, setUpdatingProjectId] = useState<number | null>(null);
+
+    const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+    const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
     useEffect(() => {
         if (authLoading) {
@@ -89,6 +93,11 @@ export default function MyProjectsPage() {
         }
     };
 
+    const handleSaveClick = (projectId: number) => {
+        setSelectedProjectId(projectId);
+        setIsSaveModalOpen(true);
+    };
+
     const renderProjectList = (projects: Project[]) => {
         if (loading) {
             return (
@@ -115,6 +124,7 @@ export default function MyProjectsPage() {
                         isOwner={true}
                         onVisibilityChange={handleVisibilityChange}
                         isChangingVisibility={updatingProjectId === project.id}
+                        onSaveClick={handleSaveClick}
                     />
                 ))}
             </div>
@@ -196,6 +206,13 @@ export default function MyProjectsPage() {
                     </TabsContent>
                 </Tabs>
             </div>
+
+            {isSaveModalOpen && selectedProjectId && (
+                <SaveToListModal
+                    projectId={selectedProjectId}
+                    onClose={() => setIsSaveModalOpen(false)}
+                />
+            )}
         </div>
     );
 }

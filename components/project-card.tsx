@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Star, Heart, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Star, Loader2, Eye, EyeOff, Bookmark } from 'lucide-react'; // Importar Bookmark
 import { Project } from '@/models/project';
 import { User } from '@/models/user';
 
@@ -16,6 +16,7 @@ interface ProjectCardProps {
   isOwner?: boolean;
   onVisibilityChange?: (projectId: number, isPublic: boolean) => void;
   isChangingVisibility?: boolean;
+  onSaveClick?: (projectId: number) => void; // Prop para abrir el modal
 }
 
 export default function ProjectCard({ 
@@ -25,7 +26,8 @@ export default function ProjectCard({
     href, 
     isOwner = false, 
     onVisibilityChange,
-    isChangingVisibility = false 
+    isChangingVisibility = false,
+    onSaveClick // Recibimos la nueva prop
 }: ProjectCardProps) {
 
     const displayRating = (project.average_rating ?? 0) > 0
@@ -37,6 +39,15 @@ export default function ProjectCard({
         e.stopPropagation();
         if (onVisibilityChange) {
             onVisibilityChange(project.id, !project.is_public);
+        }
+    };
+
+    // Handler para el botón de guardar
+    const handleSave = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onSaveClick) {
+            onSaveClick(project.id);
         }
     };
 
@@ -73,9 +84,21 @@ export default function ProjectCard({
                         height={300}
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute top-3 right-3 bg-white/90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Heart className="w-4 h-4 text-[#c1835a]" />
-                    </div>
+
+                    {/* --- BLOQUE MODIFICADO --- */}
+                    {/* Se muestra si onSaveClick existe (es decir, si el usuario está logueado) */}
+                    {onSaveClick && (
+                        <button
+                            onClick={handleSave}
+                            className="absolute top-3 right-3 bg-white/90 rounded-full p-2 z-10 transition-colors hover:bg-white hover:text-[#c1835a]"
+                            title="Guardar en favoritos"
+                        >
+                            <Bookmark className="w-4 h-4 text-[#3b3535] group-hover:text-[#c1835a]" />
+                        </button>
+                    )}
+                    {/* --- FIN DEL BLOQUE --- */}
+
+
                     {project.time_to_build > 0 && (
                         <div className="absolute bottom-3 left-3">
                             <Badge className="text-xs bg-[#f3f0eb] text-[#c89c6b]">

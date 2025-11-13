@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Download, Star, Clock, Wrench, Loader2, Home, Palette, CheckSquare, Edit, Trash2 } from 'lucide-react';
+import { Download, Star, Clock, Wrench, Loader2, Home, Palette, CheckSquare, Edit, Trash2, Heart } from 'lucide-react';
 import { ProductGallery } from '@/components/product-gallery';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { Project } from '@/models/project';
@@ -19,6 +19,7 @@ import { useAuthContext } from '@/contexts/AuthContext';
 import DOMPurify from 'dompurify';
 import { Comment, CommentWithUser } from '@/models/comment';
 import { Rating } from '@/models/rating';
+import SaveToListModal from '@/components/save-to-list-modal';
 
 
 function CommentItem({ 
@@ -117,6 +118,7 @@ export default function ProjectPage() {
     const [calculatedReputation, setCalculatedReputation] = useState<number | null>(null);
     const [isDeleting, setIsDeleting] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -514,14 +516,23 @@ export default function ProjectPage() {
                                 </div>
 
                                 {/* Botón de Descarga */}
-                                <Button
-                                    className="bg-[#656b48] hover:bg-[#3b3535] text-white py-6 text-md font-semibold rounded-xl px-8"
-                                    onClick={() => window.open(project.tutorial, '_blank')}
-                                    disabled={!project.tutorial}
-                                >
-                                    <Download className="w-5 h-5 mr-2" />
-                                    {project.tutorial ? 'Descargar Planos' : 'Planos no disponibles'}
-                                </Button>
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button
+                                        className="w-full bg-white/80 hover:bg-white text-[#c1835a] border-2 border-[#c1835a] py-6 text-md font-semibold rounded-xl"
+                                        onClick={() => appUser ? setIsSaveModalOpen(true) : alert('Debes iniciar sesión para guardar proyectos.')}
+                                    >
+                                        <Heart className="w-5 h-5 mr-2" />
+                                    Guardar
+                                    </Button>
+                                    <Button
+                                        className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-6 text-md font-semibold rounded-xl"
+                                        onClick={() => window.open(project.tutorial, '_blank')}
+                                        disabled={!project.tutorial}
+                                    >
+                                        <Download className="w-5 h-5 mr-2" />
+                                        {project.tutorial ? 'Descargar' : 'No disponible'}
+                                    </Button>
+                                </div>
                             </div>
                         </div>
 
@@ -651,7 +662,12 @@ export default function ProjectPage() {
                     </div>
                 </div>
             </div>
+            {isSaveModalOpen && (
+                <SaveToListModal 
+                    projectId={project.id} 
+                    onClose={() => setIsSaveModalOpen(false)} 
+                />
+            )}
         </div>
     );
 }
-

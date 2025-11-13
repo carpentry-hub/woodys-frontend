@@ -31,16 +31,15 @@ export default function ProfilePage() {
     const [isEditingUsername, setIsEditingUsername] = useState(false);
     const [newUsername, setNewUsername] = useState('');
     const [updateError, setUpdateError] = useState<string | null>(null);
-    const [isUpdatingUsername, setIsUpdatingUsername] = useState(false); // Nuevo estado para el botón de carga
+    const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
 
-    // Efecto para inicializar newUsername cuando appUser esté disponible
     useEffect(() => {
         if (appUser?.username) {
             setNewUsername(appUser.username);
         } else if (appUser && !appUser.username) {
-            setNewUsername(''); // Si el usuario no tiene nombre, el input debe estar vacío
+            setNewUsername('');
         }
-    }, [appUser]); // Dependencia de appUser para que se actualice
+    }, [appUser]);
 
     useEffect(() => {
         if (appUser?.id) {
@@ -95,7 +94,7 @@ export default function ProfilePage() {
             return;
         }
         setUpdateError(null);
-        setIsUpdatingUsername(true); // Iniciar estado de carga
+        setIsUpdatingUsername(true);
         
         try {
             const userToUpdate = {
@@ -109,14 +108,14 @@ export default function ProfilePage() {
                 await fetchAppUserData(firebaseUser);
             }
             setIsEditingUsername(false);
-            // newUsername ya se actualiza a través del useEffect cuando cambia appUser
         } catch (err) {
             console.error('Error updating username:', err);
             setUpdateError('No se pudo guardar el nombre. Inténtalo de nuevo.');
         } finally {
-            setIsUpdatingUsername(false); // Finalizar estado de carga
+            setIsUpdatingUsername(false);
         }
     };
+    
     const handleProfilePictureSelect = async (selectedId: number) => {
         if (!appUser) return;
         
@@ -179,14 +178,14 @@ export default function ProfilePage() {
                                                     onChange={(e) => setNewUsername(e.target.value)}
                                                     placeholder="Tu nombre de usuario"
                                                     className="bg-white border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]"
-                                                    disabled={isUpdatingUsername} // Deshabilitar input mientras carga
+                                                    disabled={isUpdatingUsername}
                                                 />
                                                 <div className='flex gap-2 mt-2 sm:mt-0'>
                                                     <Button 
                                                         onClick={handleUsernameUpdate} 
                                                         className="bg-[#656b48] hover:bg-[#3b3535] text-white px-3 h-9" 
                                                         size="sm"
-                                                        disabled={isUpdatingUsername} // Deshabilitar botón mientras carga
+                                                        disabled={isUpdatingUsername}
                                                     >
                                                         {isUpdatingUsername ? (
                                                             <Loader2 className="h-4 w-4 animate-spin" />
@@ -201,9 +200,9 @@ export default function ProfilePage() {
                                                         onClick={() => { 
                                                             setIsEditingUsername(false); 
                                                             setUpdateError(null); 
-                                                            setNewUsername(appUser?.username || ''); // Restaurar el nombre original
+                                                            setNewUsername(appUser?.username || '');
                                                         }}
-                                                        disabled={isUpdatingUsername} // Deshabilitar botón mientras carga
+                                                        disabled={isUpdatingUsername}
                                                     >
                                                         <X className="w-4 h-4" />
                                                     </Button>
@@ -225,11 +224,15 @@ export default function ProfilePage() {
                                                         size="icon" 
                                                         className="h-8 w-8 text-gray-500 hover:text-[#3b3535]"
                                                         onClick={() => {
-                                                            setNewUsername(appUser?.username || ''); // Pre-rellenar con el nombre actual
+                                                            setNewUsername(appUser?.username || '');
                                                             setIsEditingUsername(true);
                                                         }}
                                                     >
-                                                        <Edit className="w-4 h-4" />
+                                                        {appUser?.username ? (
+                                                            <Edit className="w-4 h-4" />
+                                                        ) : (
+                                                            <span className="text-xs font-medium text-[#c1835a] hover:underline">Añadir</span>
+                                                        )}
                                                     </Button>
                                                 </div>
                                                 <p className="text-md text-[#676765] mt-1">{appUser?.email || firebaseUser?.email}</p>

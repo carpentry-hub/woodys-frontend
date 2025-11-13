@@ -51,13 +51,6 @@ export function ProductGallery({ images, productName }: ProductGalleryProps) {
                         className="object-contain w-full h-full bg-white"
                         priority
                     />
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        className="absolute bottom-4 left-4 bg-[#656b48] hover:bg-[#3b3535] text-white"
-                    >
-                        Guardar
-                    </Button>
                 </div>
             </div>
         </div>
