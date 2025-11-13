@@ -48,7 +48,7 @@ export default function MyFavoritesPage() {
         try {
             await createProjectList({
                 name: newListName,
-                user: appUser.id,
+                user_id: appUser.id,
                 is_public: false,
             });
             setNewListName('');
