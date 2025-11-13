@@ -1,17 +1,17 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { X, Check, Loader2, AlertCircle } from 'lucide-react';
+import { X, Check, Loader2, AlertCircle, Trash2 } from 'lucide-react';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import Image from 'next/image';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { useFileUpload } from '@/hooks/useFileUpload';
-import { createProject } from '@/app/services/projects';
+import { createProject, getProject, updateProject, deleteProject } from '@/app/services/projects';
 import { getCurrentUserFromDB } from '@/app/services/users';
 import { mapFormDataToProject } from '@/app/utils/project-mapper';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import DescriptionEditor from '@/components/form/description-editor';
 import {
@@ -31,10 +31,11 @@ import {
     ProjectImageManager,
     TutorialFileUploader
 } from '@/components/form/project-file-uploaders';
+import { Project } from '@/models/project';
 
 export type ImagePreview = {
   id: string;
-  file: File;
+  file: File | null;
   preview: string;
 };
 
@@ -58,11 +59,18 @@ const MAX_FILE_SIZE = MAX_SIZE_MB * 1024 * 1024;
 const ALLOWED_IMAGE_TYPE = 'image/jpeg';
 const MAX_IMAGES = 10;
 
-export default function CreateProjectPage() {
+function CreateProjectContent() {
     const router = useRouter();
-    const { user } = useAuth();
+    const searchParams = useSearchParams();
+    const { user, appUser } = useAuth();
     const { uploadFile, uploadMultipleFiles, uploading } = useFileUpload();
     
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [projectId, setProjectId] = useState<number | null>(null);
+    const [existingProject, setExistingProject] = useState<Project | null>(null);
+    const [isPageLoading, setIsPageLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const [formData, setFormData] = useState<FormData>({
         title: '',
         altura: '',
@@ -91,6 +99,61 @@ export default function CreateProjectPage() {
     const [imageError, setImageError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const editIdParam = searchParams.get('edit');
+        if (editIdParam) {
+            setIsPageLoading(true);
+            setIsEditMode(true);
+            const id = Number(editIdParam);
+            setProjectId(id);
+
+            getProject(id)
+                .then(project => {
+                    if (appUser && project.owner !== appUser.id) {
+                        console.error('Permiso denegado: No eres el dueño de este proyecto.');
+                        router.push('/');
+                        return;
+                    }
+                    
+                    setExistingProject(project);
+                    
+                    setFormData({
+                        title: project.title,
+                        altura: project.height.toString(),
+                        largo: project.length.toString(),
+                        ancho: project.width.toString(),
+                        materialPrincipal: project.main_material,
+                        description: project.description,
+                        estilos: project.style,
+                        tiempoArmado: project.time_to_build.toString(),
+                        materiales: project.materials,
+                        herramientas: project.tools,
+                        ambiente: project.environment,
+                        is_public: project.is_public,
+                    });
+
+                    setUploadedFiles({
+                        coverImage: { file: null, preview: project.portrait },
+                        images: project.images.map((url, index) => ({
+                            id: `existing-${index}-${url}`,
+                            file: null,
+                            preview: url
+                        })),
+                        tutorialFile: null 
+                    });
+
+                    setIsPageLoading(false);
+                })
+                .catch(err => {
+                    console.error('Error al cargar el proyecto para editar:', err);
+                    setIsPageLoading(false);
+                    router.push('/');
+                });
+        } else {
+            setIsPageLoading(false);
+        }
+    }, [searchParams, appUser, user, router]);
 
     const handleInputChange = (field: keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas' | 'is_public'>, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value } as FormData));
@@ -251,35 +314,32 @@ export default function CreateProjectPage() {
     };
 
     useEffect(() => {
-        const coverPreview = uploadedFiles.coverImage.preview;
-        const galleryPreviews = uploadedFiles.images.map(img => img.preview);
+        const newPreviews = uploadedFiles.images
+            .filter(img => img.file !== null)
+            .map(img => img.preview);
         
+        const coverPreview = uploadedFiles.coverImage.file ? uploadedFiles.coverImage.preview : null;
+
         return () => {
             if (coverPreview) {
                 URL.revokeObjectURL(coverPreview);
             }
-            galleryPreviews.forEach(preview => URL.revokeObjectURL(preview));
+            newPreviews.forEach(preview => URL.revokeObjectURL(preview));
         };
-    }, [uploadedFiles.coverImage.preview, uploadedFiles.images]);
+    }, [uploadedFiles.coverImage, uploadedFiles.images]);
+
 
     const handleSubmit = async () => {
-        if (!user) {
-            setSubmitError('Debes estar autenticado para crear un proyecto');
+        if (!user || !appUser) {
+            setSubmitError('Debes estar autenticado para esta acción.');
             return;
         }
-
         if (!formData.title.trim()) {
             setSubmitError('El título es obligatorio');
             return;
         }
-
         if (!formData.description.trim()) {
             setSubmitError('La descripción es obligatoria');
-            return;
-        }
-
-        if (!uploadedFiles.coverImage.file) {
-            setSubmitError('La imagen de portada es obligatoria');
             return;
         }
 
@@ -287,47 +347,132 @@ export default function CreateProjectPage() {
         setSubmitError(null);
 
         try {
-            const currentUser = await getCurrentUserFromDB();
-            const projectTempId = Date.now().toString();
-    
-            const portraitUrl = await uploadFile(
-                uploadedFiles.coverImage.file,
-                `projects/${projectTempId}/portrait`
-            );
+            if (isEditMode && projectId && existingProject) {
+                
+                let newPortraitUrl = null;
+                if (uploadedFiles.coverImage.file) {
+                    newPortraitUrl = await uploadFile(
+                        uploadedFiles.coverImage.file,
+                        `projects/${projectId}/portrait`
+                    );
+                }
 
-            let imageUrls: string[] = [];
-            const filesToUpload = uploadedFiles.images.map(img => img.file);
-            if (filesToUpload.length > 0) {
-                imageUrls = await uploadMultipleFiles(
-                    filesToUpload,
-                    `projects/${projectTempId}/images`
+                const newImageFiles = uploadedFiles.images
+                    .map(img => img.file)
+                    .filter((file): file is File => file !== null);
+                
+                let newImageUrls: string[] = [];
+                if (newImageFiles.length > 0) {
+                    newImageUrls = await uploadMultipleFiles(
+                        newImageFiles,
+                        `projects/${projectId}/images`
+                    );
+                }
+
+                let newTutorialUrl = null;
+                if (uploadedFiles.tutorialFile) {
+                    newTutorialUrl = await uploadFile(
+                        uploadedFiles.tutorialFile,
+                        `projects/${projectId}/tutorial`
+                    );
+                }
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const textData = mapFormDataToProject(formData, {} as any, appUser.id);
+                
+                const projectToUpdate: Project = {
+                    ...existingProject,
+                    ...textData,
+                    portrait: newPortraitUrl || existingProject.portrait,
+                    images: [
+                        ...uploadedFiles.images.filter(img => img.file === null).map(img => img.preview),
+                        ...newImageUrls
+                    ],
+                    tutorial: newTutorialUrl || existingProject.tutorial,
+                };
+                
+                const updated = await updateProject(projectId, projectToUpdate);
+                router.push(`/project/${updated.id}`);
+
+            } else {
+                
+                if (!uploadedFiles.coverImage.file) {
+                    setSubmitError('La imagen de portada es obligatoria');
+                    setIsSubmitting(false);
+                    return;
+                }
+                
+                const currentUser = await getCurrentUserFromDB();
+                const projectTempId = Date.now().toString();
+        
+                const portraitUrl = await uploadFile(
+                    uploadedFiles.coverImage.file,
+                    `projects/${projectTempId}/portrait`
                 );
-            }
 
-            let tutorialUrl = '';
-            if (uploadedFiles.tutorialFile) {
-                tutorialUrl = await uploadFile(
-                    uploadedFiles.tutorialFile,
-                    `projects/${projectTempId}/tutorial`
-                );
-            }
+                let imageUrls: string[] = [];
+                const filesToUpload = uploadedFiles.images.map(img => img.file).filter(Boolean) as File[];
+                if (filesToUpload.length > 0) {
+                    imageUrls = await uploadMultipleFiles(
+                        filesToUpload,
+                        `projects/${projectTempId}/images`
+                    );
+                }
 
-            const fileUrls = { portraitUrl, imageUrls, tutorialUrl };
-            const projectData = mapFormDataToProject(formData, fileUrls, currentUser.id);
-            const newProject = await createProject(projectData);
-    
-            router.push(`/project/${newProject.id}`);
-    
+                let tutorialUrl = '';
+                if (uploadedFiles.tutorialFile) {
+                    tutorialUrl = await uploadFile(
+                        uploadedFiles.tutorialFile,
+                        `projects/${projectTempId}/tutorial`
+                    );
+                }
+
+                const fileUrls = { portraitUrl, imageUrls, tutorialUrl };
+                const projectData = mapFormDataToProject(formData, fileUrls, currentUser.id);
+                const newProject = await createProject(projectData);
+        
+                router.push(`/project/${newProject.id}`);
+            }
+        
         } catch (error: unknown) {
             if (error instanceof Error) {
                 setSubmitError(error.message);
             } else {
-                setSubmitError('Error al crear el proyecto. Intenta nuevamente.');
+                setSubmitError('Error al guardar el proyecto. Intenta nuevamente.');
             }
         } finally {
             setIsSubmitting(false);
         }
     };
+
+    const handleDelete = async () => {
+        if (!isEditMode || !projectId) return;
+
+        if (window.confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) {
+            setIsDeleting(true);
+            setSubmitError(null);
+            try {
+                await deleteProject(projectId);
+                alert('Proyecto eliminado exitosamente.');
+                router.push('/profile');
+            } catch (error: unknown) {
+                if (error instanceof Error) {
+                    setSubmitError(error.message);
+                } else {
+                    setSubmitError('Error al eliminar el proyecto.');
+                }
+                setIsDeleting(false);
+            }
+        }
+    };
+
+    if (isPageLoading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen bg-[#f2f0eb]">
+                <Loader2 className="w-12 h-12 text-[#c1835a] animate-spin" />
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 bg-[#f2f0eb]">
@@ -335,7 +480,9 @@ export default function CreateProjectPage() {
             <div className="mx-auto w-full max-w-6xl bg-white rounded-lg shadow-xl">
                 <div className="p-8">
                     <div className="flex items-center justify-between mb-8">
-                        <h2 className="text-2xl font-bold text-[#3b3535]">Crear un nuevo proyecto</h2>
+                        <h2 className="text-2xl font-bold text-[#3b3535]">
+                            {isEditMode ? 'Editar Proyecto' : 'Crear un nuevo proyecto'}
+                        </h2>
                         <div className="flex items-center space-x-4">
                             <Image
                                 src="/logo.png"
@@ -350,7 +497,6 @@ export default function CreateProjectPage() {
 
                     <div className="space-y-6">
 
-                        {/* --- SECCIÓN 1: INFORMACIÓN PRINCIPAL --- */}
                         <div className="space-y-4">
                             <h3 className="text-xl font-semibold text-[#3b3535] border-b border-[#c89c6b]/50 pb-2">
                                 Información Principal
@@ -430,7 +576,6 @@ export default function CreateProjectPage() {
 
                         <hr className="border-[#c89c6b]/30" />
 
-                        {/* --- SECCIÓN 2: DESCRIPCIÓN --- */}
                         <div>
                             <label className="block text-xl font-semibold text-[#3b3535] mb-4">Descripción</label>
                             <DescriptionEditor
@@ -441,7 +586,6 @@ export default function CreateProjectPage() {
 
                         <hr className="border-[#c89c6b]/30" />
 
-                        {/* --- SECCIÓN 3: ARCHIVOS DEL PROYECTO --- */}
                         <div className="space-y-6">
                             <h3 className="text-xl font-semibold text-[#3b3535] border-b border-[#c89c6b]/50 pb-2">
                                 Archivos del Proyecto
@@ -475,7 +619,6 @@ export default function CreateProjectPage() {
                         
                         <hr className="border-[#c89c6b]/30" />
 
-                        {/* --- SECCIÓN 4: CLASIFICACIÓN Y DETALLES --- */}
                         <div className="space-y-6">
                             <h3 className="text-xl font-semibold text-[#3b3535] border-b border-[#c89c6b]/50 pb-2">
                                 Clasificación y Detalles
@@ -490,7 +633,7 @@ export default function CreateProjectPage() {
                                     <label className="block text-sm font-medium text-[#3b3535] mb-2">{label}</label>
                                     <Select onValueChange={(val) => handleMultiSelect(key as 'estilos' | 'materiales' | 'herramientas', val)}>
                                         <SelectTrigger className="w-full border-[#c89c6b] focus:ring-[#c89c6b] focus:border-[#c89c6b]">
-                                            Selecciona {label.toLowerCase()}
+                                            <SelectValue placeholder={`Selecciona ${label.toLowerCase()}`} />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {options.map((opt) => (
@@ -551,7 +694,6 @@ export default function CreateProjectPage() {
                             </div>
                         </div>
 
-                        {/* --- SECCIÓN 5: PUBLICAR --- */}
                         {submitError && (
                             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                                 {submitError}
@@ -561,25 +703,53 @@ export default function CreateProjectPage() {
                         <div className="flex flex-col space-y-4 pt-6 border-t border-[#c89c6b]/30">
                             <Button 
                                 onClick={handleSubmit} 
-                                disabled={isSubmitting || uploading}
+                                disabled={isSubmitting || uploading || isDeleting}
                                 className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-4 text-lg font-semibold flex items-center justify-center space-x-2 disabled:opacity-50"
                             >
                                 {isSubmitting || uploading ? (
                                     <>
                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                        <span>{uploading ? 'Subiendo archivos...' : 'Creando proyecto...'}</span>
+                                        <span>{uploading ? 'Subiendo archivos...' : (isEditMode ? 'Actualizando...' : 'Publicando...')}</span>
                                     </>
                                 ) : (
                                     <>
                                         <Check className="w-5 h-5" />
-                                        <span>Publicar proyecto!</span>
+                                        <span>{isEditMode ? 'Actualizar Proyecto' : 'Publicar Proyecto'}</span>
                                     </>
                                 )}
                             </Button>
+                            
+                            {isEditMode && (
+                                <Button 
+                                    variant="destructive"
+                                    onClick={handleDelete} 
+                                    disabled={isSubmitting || uploading || isDeleting}
+                                    className="w-full"
+                                >
+                                    {isDeleting ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <Trash2 className="w-5 h-5" />
+                                    )}
+                                    <span className="ml-2">Eliminar Proyecto</span>
+                                </Button>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function CreateProjectPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex justify-center items-center min-h-screen bg-[#f2f0eb]">
+                <Loader2 className="w-12 h-12 text-[#c1835a] animate-spin" />
+            </div>
+        }>
+            <CreateProjectContent />
+        </Suspense>
     );
 }

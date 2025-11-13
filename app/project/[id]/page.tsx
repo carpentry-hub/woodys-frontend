@@ -2,16 +2,16 @@
 'use client';
 
 import { useEffect, useState, } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Download, Star, Clock, Wrench, Loader2, Home, Palette, CheckSquare } from 'lucide-react';
+import { Download, Star, Clock, Wrench, Loader2, Home, Palette, CheckSquare, Edit, Trash2 } from 'lucide-react';
 import { ProductGallery } from '@/components/product-gallery';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { Project } from '@/models/project';
 import { User } from '@/models/user';
-import { getProject } from '../../services/projects';
+import { deleteProject, getProject } from '../../services/projects';
 import { getUser, getUserByFirebaseUid, getUserProjects } from '../../services/users';
 import { rateProject, getProjectRatings, updateRating } from '../../services/ratings';
 import { listProjectComments, commentProject, replyToComment } from '../../services/comments';
@@ -100,6 +100,7 @@ function CommentItem({
 
 export default function ProjectPage() {
     const params = useParams();
+    const router = useRouter();
     const projectId = Number(params?.id);
     const [project, setProject] = useState<Project | null>(null);
     const [author, setAuthor] = useState<User | null>(null);
@@ -114,6 +115,8 @@ export default function ProjectPage() {
     const [replyingTo, setReplyingTo] = useState<number | null>(null);
     const [replyContent, setReplyContent] = useState('');
     const [calculatedReputation, setCalculatedReputation] = useState<number | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
 
     useEffect(() => {
         if (user) {
@@ -418,6 +421,30 @@ export default function ProjectPage() {
     const lengthValue = formatDimension(project.length);
     const widthValue = formatDimension(project.width);
 
+    const handleEdit = () => {
+        if (!project) return;
+        router.push(`/create-project?edit=${project.id}`);
+    };
+
+    const handleDelete = async () => {
+        if (!project) return;
+        if (window.confirm('¿Estás seguro de que quieres eliminar este proyecto? Esta acción no se puede deshacer.')) {
+            setIsDeleting(true);
+            setDeleteError(null);
+            try {
+                await deleteProject(project.id);
+                alert('Proyecto eliminado exitosamente.');
+                router.push('/profile'); // O a /my-projects
+            } catch (err: any) {
+                console.error(err);
+                setDeleteError('No se pudo eliminar el proyecto.');
+            } finally {
+                setIsDeleting(false);
+            }
+        }
+    };
+    const isOwner = appUser && project && appUser.id === project.owner;
+
     return (
         <div className="min-h-screen bg-[#f2f0eb]">
             <ResponsiveHeader />
@@ -425,7 +452,21 @@ export default function ProjectPage() {
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
                         <div className="lg:col-span-3 space-y-6">
-                            <h1 className="text-3xl font-bold text-[#3b3535]">{project.title}</h1>
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                                <h1 className="text-3xl font-bold text-[#3b3535]">{project.title}</h1>
+                                {isOwner && (
+                                    <div className="flex gap-2 flex-shrink-0">
+                                        <Button variant="outline" onClick={handleEdit} className="bg-white/50">
+                                            <Edit className="w-4 h-4 mr-2" /> Editar
+                                        </Button>
+                                        <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                                            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                                            <span className="ml-2">Eliminar</span>
+                                        </Button>
+                                    </div>
+                                )}
+                            </div>
+                            {deleteError && <div className="text-red-500 text-sm mt-2">{deleteError}</div>}
 
                             {/* Dimensiones y Material Principal */}
                             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">

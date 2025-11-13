@@ -1,16 +1,11 @@
-
 import { getIdTokenHeader } from '@/lib/auth-headers';
 import { API_BASE_URL } from './api-routes';
 import { Project } from '@/models/project';
 
-// Objeto para tipar los filtros que podemos enviar al backend
 export interface ProjectSearchFilters {
   [key: string]: string;
 }
 
-/**
- * Busca proyectos en el backend utilizando un término de búsqueda y filtros.
- */
 export async function searchProjects(searchTerm: string, filters: ProjectSearchFilters): Promise<Project[]> {
     const params = new URLSearchParams();
     if (searchTerm) {
@@ -23,7 +18,6 @@ export async function searchProjects(searchTerm: string, filters: ProjectSearchF
     });
     const queryString = params.toString();
 
-    // NOTA: Tu backend en Go no usa el prefijo /api, así que lo quitamos.
     const res = await fetch(`${API_BASE_URL}/projects/search?${queryString}`);
 
     if (!res.ok) {
@@ -35,12 +29,6 @@ export async function searchProjects(searchTerm: string, filters: ProjectSearchF
     return projects;
 }
 
-/**
- * ✅ FUNCIÓN AÑADIDA
- * Busca un único proyecto por su ID.
- * @param id El ID numérico del proyecto.
- * @returns Una promesa que resuelve a un objeto Project.
- */
 export async function getProject(id: number): Promise<Project> {
     console.log(`[getProject] Buscando proyecto con ID: ${id}`);
     const res = await fetch(`${API_BASE_URL}/projects/${id}`);
@@ -76,6 +64,66 @@ export async function createProject(data: Omit<Project, 'id' | 'average_rating' 
         return newProject;
     } catch (error) {
         console.error('[createProject] Falló la llamada fetch:', error);
+        throw error;
+    }
+}
+
+/**
+ * Actualiza un proyecto existente.
+ * Tu backend espera el objeto de proyecto COMPLETO, incluyendo el ID.
+ * @param id El ID del proyecto a actualizar.
+ * @param data El objeto de proyecto COMPLETO con los campos actualizados.
+ */
+export async function updateProject(id: number, data: Project): Promise<Project> {
+    console.log(`[updateProject] Actualizando proyecto con ID: ${id}`, data);
+    const headers = { 'Content-Type': 'application/json', ...(await getIdTokenHeader()) };
+    
+    try {
+        const res = await fetch(`${API_BASE_URL}/projects/${id}`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(data),
+        });
+
+        console.log('[updateProject] Respuesta del servidor:', res.status, res.statusText);
+        if (!res.ok) {
+            const errorBody = await res.text();
+            console.error('[updateProject] Error del servidor:', errorBody);
+            throw new Error('Error del servidor al actualizar el proyecto');
+        }
+        const updatedProject = await res.json();
+        console.log('[updateProject] Proyecto actualizado exitosamente:', updatedProject);
+        return updatedProject;
+    } catch (error) {
+        console.error('[updateProject] Falló la llamada fetch:', error);
+        throw error;
+    }
+}
+
+/**
+ * Elimina un proyecto por su ID.
+ * @param id El ID del proyecto a eliminar.
+ */
+export async function deleteProject(id: number): Promise<void> {
+    console.log(`[deleteProject] Eliminando proyecto con ID: ${id}`);
+    const headers = await getIdTokenHeader();
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/projects/${id}`, {
+            method: 'DELETE',
+            headers,
+        });
+
+        console.log('[deleteProject] Respuesta del servidor:', res.status, res.statusText);
+        if (!res.ok) {
+            const errorBody = await res.text();
+            console.error('[deleteProject] Error del servidor:', errorBody);
+            throw new Error('Error del servidor al eliminar el proyecto');
+        }
+        console.log('[deleteProject] Proyecto eliminado exitosamente.');
+        return; 
+    } catch (error) {
+        console.error('[deleteProject] Falló la llamada fetch:', error);
         throw error;
     }
 }
