@@ -132,35 +132,42 @@ export default function LandingPage() {
                         </div>
                         {/* Hotspots interactivos */}
                         {/* Mesa pasillo */}
-                        <div className="absolute left-[7%] top-[60%] flex flex-col items-center group">
+                        <Link href="/project/10" className="absolute left-[7%] top-[60%] flex flex-col items-center group">
                             <div className="mb-2 px-3 py-1 rounded-full bg-white/70 backdrop-blur-sm text-xs text-[#3b3535] font-medium shadow transition-all group-hover:bg-[#c1835a] group-hover:text-white">
-                Mesa pasillo
+        Mesa pasillo
                             </div>
                             <div className="w-0.5 h-8 bg-white/60 group-hover:bg-[#c1835a]" />
-                            <button className="w-8 h-8 bg-white/80 border-2 border-white shadow-lg rounded-full flex items-center justify-center transition-all group-hover:bg-[#c1835a] group-hover:border-[#c1835a]">
+                            <div className="w-8 h-8 bg-white/80 border-2 border-white shadow-lg rounded-full flex items-center justify-center transition-all group-hover:bg-[#c1835a] group-hover:border-[#c1835a]">
                                 <div className="w-3 h-3 bg-[#c1835a] rounded-full group-hover:bg-white transition-all"></div>
-                            </button>
-                        </div>
+                            </div>
+                        </Link>
                         {/* Mesa comedor */}
-                        <div className="absolute left-1/2 top-[32%] flex flex-col items-center group" style={{transform:'translateX(-50%)'}}>
-                            <div className="mb-2 px-3 py-1 rounded-full bg-white/70 backdrop-blur-sm text-xs text-[#3b3535] font-medium shadow transition-all group-hover:bg-[#c1835a] group-hover:text-white">
-                Mesa comedor
-                            </div>
-                            <div className="w-0.5 h-12 bg-white/60 group-hover:bg-[#c1835a]" />
-                            <button className="w-8 h-8 bg-white/80 border-2 border-white shadow-lg rounded-full flex items-center justify-center transition-all group-hover:bg-[#c1835a] group-hover:border-[#c1835a]">
-                                <div className="w-3 h-3 bg-[#c1835a] rounded-full group-hover:bg-white transition-all"></div>
-                            </button>
-                        </div>
-                        {/* Silla cómoda */}
-                        <div className="absolute right-[22%] top-[60%] flex flex-col items-center group">
-                            <div className="mb-2 px-3 py-1 rounded-full bg-white/70 backdrop-blur-sm text-xs text-[#3b3535] font-medium shadow transition-all group-hover:bg-[#c1835a] group-hover:text-white">
-                Silla cómoda
+                        <Link 
+                            href="/project/12" 
+                            className="absolute left-1/2 top-[32%] flex flex-col items-center group" 
+                            style={{transform:'translateX(-50%)'}}
+                        >
+                            <div className="mb-2 px-3 py-1 rounded-full bg-white backdrop-blur-sm text-xs text-[#3b3535] font-medium shadow transition-all group-hover:bg-[#c1835a] group-hover:text-white">
+        Mesa comedor
                             </div>
                             <div className="w-0.5 h-8 bg-white/60 group-hover:bg-[#c1835a]" />
-                            <button className="w-8 h-8 bg-white/80 border-2 border-white shadow-lg rounded-full flex items-center justify-center transition-all group-hover:bg-[#c1835a] group-hover:border-[#c1835a]">
+                            <div className="w-8 h-8 bg-white/80 border-2 border-white shadow-lg rounded-full flex items-center justify-center transition-all group-hover:bg-[#c1835a] group-hover:border-[#c1835a]">
                                 <div className="w-3 h-3 bg-[#c1835a] rounded-full group-hover:bg-white transition-all"></div>
-                            </button>
-                        </div>
+                            </div>
+                        </Link>
+                        {/* Silla cómoda */}
+                        <Link 
+                            href="/project/11" 
+                            className="absolute right-[22%] top-[60%] flex flex-col items-center group"
+                        >
+                            <div className="mb-2 px-3 py-1 rounded-full bg-white/70 backdrop-blur-sm text-xs text-[#3b3535] font-medium shadow transition-all group-hover:bg-[#c1835a] group-hover:text-white">
+        Silla cómoda
+                            </div>
+                            <div className="w-0.5 h-8 bg-white/60 group-hover:bg-[#c1835a]" />
+                            <div className="w-8 h-8 bg-white/80 border-2 border-white shadow-lg rounded-full flex items-center justify-center transition-all group-hover:bg-[#c1835a] group-hover:border-[#c1835a]">
+                                <div className="w-3 h-3 bg-[#c1835a] rounded-full group-hover:bg-white transition-all"></div>
+                            </div>
+                        </Link>
                     </div>
                 </div>
             </motion.section>
@@ -303,7 +310,7 @@ export default function LandingPage() {
                 filterKey="style"
                 filterValue="vintage"
             />
-            
+
             {/* Final CTA Section */}
             <section className="bg-[#656b48] py-12 sm:py-16">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
