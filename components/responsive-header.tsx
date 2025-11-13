@@ -2,18 +2,18 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useAuth } from '../hooks/useAuth';
+import { useAuthContext } from '../contexts/AuthContext'; // Importamos useAuthContext
 import LoginModal from '@/components/login-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Search, Bell, Menu, X, Home, FolderOpen, Heart, User, ChevronDown } from 'lucide-react';
+import { Search, Bell, Menu, X, Home, FolderOpen, Heart, User, ChevronDown, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { NotificationsDropdown } from '@/components/notifications-dropdown';
 
 interface ResponsiveHeaderProps {
-  onCreateProject?: () => void
+    onCreateProject?: () => void
 }
 
 export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
@@ -23,48 +23,20 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
     const pathname = usePathname();
 
     const navigationItems = [
-        {
-            name: 'Explorar proyectos',
-            href: '/explorer',
-            icon: Home,
-            active: pathname === '/explorer',
-            always: true,
-        },
-        {
-            name: 'Mis proyectos',
-            href: '/my-projects',
-            icon: FolderOpen,
-            active: pathname === '/my-projects',
-            always: false,
-        },
-        {
-            name: 'Mis favoritos',
-            href: '/my-favorites',
-            icon: Heart,
-            active: pathname === '/my-favorites',
-            always: false,
-        },
-        {
-            name: 'Crear proyecto',
-            href: '/create-project',
-            icon: User,
-            active: pathname === '/create-project',
-            always: false,
-        },
+        { name: 'Explorar proyectos', href: '/explorer', icon: Home, active: pathname === '/explorer', always: true, },
+        { name: 'Mis proyectos', href: '/my-projects', icon: FolderOpen, active: pathname === '/my-projects', always: false, },
+        { name: 'Mis favoritos', href: '/my-favorites', icon: Heart, active: pathname === '/my-favorites', always: false, },
+        { name: 'Crear proyecto', href: '/create-project', icon: User, active: pathname === '/create-project', always: false, },
     ];
 
-    const toggleMenu = () => {
-        setIsMenuOpen(!isMenuOpen);
-    };
+    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+    const closeMenu = () => setIsMenuOpen(false);
 
-    const closeMenu = () => {
-        setIsMenuOpen(false);
-    };
-
-    const { user, logout } = useAuth();
+    const { user, appUser, profilePictureUrl, loading, logout } = useAuthContext();
     const [loginModalOpen, setLoginModalOpen] = useState(false);
     const [profileMenuOpen, setProfileMenuOpen] = useState(false);
     const protectedRoutes = ['/my-projects', '/my-favorites', '/profile'];
+
     const handleLogout = () => {
         logout();
         setProfileMenuOpen(false);
@@ -73,9 +45,15 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
         }
     };
 
+    const getFallback = () => {
+        if (appUser?.username) return appUser.username[0].toUpperCase();
+        if (user?.displayName) return user.displayName.split(' ').map(n => n[0]).join('');
+        if (user?.email) return user.email.slice(0, 2).toUpperCase();
+        return 'U';
+    };
+
     return (
         <>
-            {/* Fixed Header */}
             <header
                 className="fixed top-0 left-0 right-0 z-50 border-b border-[#f6f6f6] shadow-sm"
                 style={{
@@ -86,7 +64,6 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
             >
                 <div className="px-4 sm:px-6 py-3 sm:py-4 relative">
                     <div className="flex items-center justify-between">
-                        {/* Mobile Menu Button & Navigation */}
                         <div className="flex items-center space-x-3 min-w-0">
                             <button
                                 onClick={toggleMenu}
@@ -95,7 +72,6 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                             >
                                 {isMenuOpen ? <X className="w-6 h-6 text-[#3d3d3d]" /> : <Menu className="w-6 h-6 text-[#3d3d3d]" />}
                             </button>
-                            {/* Desktop Navigation */}
                             <AnimatePresence mode="wait">
                                 <motion.nav
                                     key={user ? 'nav-logged' : 'nav-guest'}
@@ -123,7 +99,6 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                             </AnimatePresence>
                         </div>
 
-                        {/* Logo - Always Centered */}
                         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center">
                             <Link href="/" className="flex items-center">
                                 <Image
@@ -148,9 +123,7 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                             </Link>
                         </div>
 
-                        {/* Right Side Actions */}
                         <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-                            {/* Search - Desktop */}
                             <div className="hidden md:block relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#adadad] w-4 h-4" />
                                 <input
@@ -160,7 +133,6 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                                 />
                             </div>
 
-                            {/* Search - Mobile */}
                             <button
                                 onClick={() => setIsSearchOpen(!isSearchOpen)}
                                 className="md:hidden p-2 hover:bg-[#f6f6f6] rounded-full transition-colors"
@@ -169,7 +141,6 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                                 <Search className="w-5 h-5 text-[#3d3d3d]" />
                             </button>
 
-                            {/* Notifications */}
                             <div className="relative">
                                 <button
                                     onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
@@ -182,22 +153,23 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                                 <NotificationsDropdown isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />
                             </div>
 
-                            {/* Profile - Desktop */}
-                            {user ? (
+                            {loading ? (
+                                <Loader2 className="w-6 h-6 animate-spin text-[#c1835a] sm:block" />
+                            ) : user ? (
                                 <div className="hidden sm:flex items-center space-x-2 relative">
                                     <button
                                         onClick={() => setProfileMenuOpen((v) => !v)}
                                         className="flex items-center space-x-2 hover:bg-[#f6f6f6] rounded-lg px-2 py-1 transition-colors focus:outline-none"
                                     >
                                         <Avatar className="w-8 h-8 hover:ring-2 hover:ring-[#c1835a] transition-all">
-                                            {user.photoURL ? (
-                                                <AvatarImage src={user.photoURL} />
+                                            {profilePictureUrl ? (
+                                                <AvatarImage src={profilePictureUrl} />
                                             ) : (
-                                                <AvatarFallback>{user.displayName ? user.displayName.split(' ').map(n => n[0]).join('') : user.email?.slice(0,2).toUpperCase()}</AvatarFallback>
+                                                <AvatarFallback>{getFallback()}</AvatarFallback>
                                             )}
                                         </Avatar>
                                         <span className="text-[#3d3d3d] text-sm font-medium hover:text-[#c1835a] transition-colors hidden lg:block">
-                                            {user.displayName || user.email}
+                                            {appUser?.username || user.displayName || user.email}
                                         </span>
                                         <ChevronDown className="w-4 h-4 ml-1 text-[#adadad]" />
                                     </button>
@@ -208,7 +180,7 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                                                 onClick={handleLogout}
                                                 className="w-full text-left px-4 py-2 text-sm text-[#c1835a] hover:bg-[#f6f6f6] rounded-b-lg"
                                             >
-                        Cerrar sesión
+                                                Cerrar sesión
                                             </button>
                                         </div>
                                     )}
@@ -216,7 +188,7 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                             ) : (
                                 <>
                                     <Button onClick={() => setLoginModalOpen(true)} className="hidden sm:flex bg-[#c1835a] text-white items-center px-4 py-2 rounded-lg">
-                    Iniciar sesión
+                                        Iniciar sesión
                                     </Button>
                                     {loginModalOpen && (
                                         <LoginModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
@@ -224,17 +196,18 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                                 </>
                             )}
 
-                            {/* Profile - Mobile */}
                             <Link href="/profile" className="sm:hidden">
                                 <Avatar className="w-8 h-8 hover:ring-2 hover:ring-[#c1835a] transition-all">
-                                    <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                                    <AvatarFallback>PV</AvatarFallback>
+                                    {profilePictureUrl ? (
+                                        <AvatarImage src={profilePictureUrl} />
+                                    ) : (
+                                        <AvatarFallback>{getFallback()}</AvatarFallback>
+                                    )}
                                 </Avatar>
                             </Link>
                         </div>
                     </div>
 
-                    {/* Mobile Search Bar */}
                     {isSearchOpen && (
                         <div className="md:hidden mt-4 relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#adadad] w-4 h-4" />
@@ -249,17 +222,14 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                 </div>
             </header>
 
-            {/* Mobile Menu Overlay */}
             {isMenuOpen && <div className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={closeMenu} />}
 
-            {/* Mobile Menu Sidebar */}
             <div
                 className={`lg:hidden fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-[#ffffff] z-50 transform transition-transform duration-300 ease-in-out ${
                     isMenuOpen ? 'translate-x-0' : '-translate-x-full'
                 } shadow-xl`}
             >
                 <div className="p-6">
-                    {/* Mobile Menu Header */}
                     <div className="flex items-center justify-between mb-8">
                         <Link href="/" onClick={closeMenu} className="flex items-center space-x-2">
                             <div className="w-10 h-10 bg-[#c1835a] rounded-full"></div>
@@ -277,7 +247,6 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                         </button>
                     </div>
 
-                    {/* User Profile Section */}
                     <div className="mb-8 p-4 bg-[#f6f6f6] rounded-lg">
                         {user ? (
                             <div className="relative">
@@ -286,14 +255,14 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                                     className="flex items-center w-full space-x-3 focus:outline-none hover:bg-[#ececec] rounded-lg px-2 py-2 transition-colors"
                                 >
                                     <Avatar className="w-12 h-12">
-                                        {user.photoURL ? (
-                                            <AvatarImage src={user.photoURL} />
+                                        {profilePictureUrl ? (
+                                            <AvatarImage src={profilePictureUrl} />
                                         ) : (
-                                            <AvatarFallback>{user.displayName ? user.displayName.split(' ').map(n => n[0]).join('') : user.email?.slice(0,2).toUpperCase()}</AvatarFallback>
+                                            <AvatarFallback>{getFallback()}</AvatarFallback>
                                         )}
                                     </Avatar>
                                     <div className="flex-1 text-left">
-                                        <div className="font-semibold text-[#3b3535] truncate">{user.displayName || user.email}</div>
+                                        <div className="font-semibold text-[#3b3535] truncate">{appUser?.username || user.displayName || user.email}</div>
                                         <div className="text-sm text-[#676765]">Ver perfil completo</div>
                                     </div>
                                     <ChevronDown className="w-5 h-5 text-[#adadad] ml-2" />
@@ -305,22 +274,21 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                                             onClick={() => { logout(); setProfileMenuOpen(false); closeMenu(); }}
                                             className="w-full text-left px-4 py-2 text-sm text-[#c1835a] hover:bg-[#f6f6f6] rounded-b-lg"
                                         >
-                      Cerrar sesión
+                                            Cerrar sesión
                                         </button>
                                     </div>
                                 )}
                             </div>
                         ) : (
                             <>
-                                <Button onClick={() => setLoginModalOpen(true)} className="hidden sm:flex bg-[#c1835a] text-white items-center px-4 py-2 rounded-lg">
-                    Iniciar sesión
+                                <Button onClick={() => setLoginModalOpen(true)} className="w-full bg-[#c1835a] text-white items-center px-4 py-2 rounded-lg">
+                                    Iniciar sesión
                                 </Button>
                                 <LoginModal open={loginModalOpen} onClose={() => setLoginModalOpen(false)} />
                             </>
                         )}
                     </div>
 
-                    {/* Navigation Links */}
                     <nav className="space-y-2 mb-8">
                         {navigationItems.filter(item => item.always || user).map((item) => {
                             const Icon = item.icon;
@@ -340,7 +308,6 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                         })}
                     </nav>
 
-                    {/* Action Buttons */}
                     <div className="space-y-3">
                         {onCreateProject && (
                             <Button
@@ -355,22 +322,20 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                         )}
                         <Link href="/explorer" onClick={closeMenu}>
                             <Button variant="outline" className="w-full py-3 rounded-lg bg-transparent">
-                Explorar proyectos
+                                Explorar proyectos
                             </Button>
                         </Link>
                     </div>
-                    {/* Footer */}
                     <div className="mt-8 pt-6 border-t border-[#f6f6f6] text-center">
                         <p className="text-xs text-[#676765]">
-              © 2025 Woody&lsquo;s Workshop
+                            © 2025 Woody&lsquo;s Workshop
                             <br />
-              Hecho con ❤️ para makers
+                            Hecho con ❤️ para makers
                         </p>
                     </div>
                 </div>
             </div>
 
-            {/* Spacer for fixed header */}
             <div className="h-16 sm:h-20"></div>
         </>
     );

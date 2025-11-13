@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Edit, Calendar } from 'lucide-react';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { useAuth } from '../../hooks/useAuth';
-import { getUserByFirebaseUid, getUser, getUserProjects } from '../services/users';
+import { getUserByFirebaseUid, getUser, getUserProjects, getUserProfilePictureUrl, updateUser } from '../services/users';
 import ProfilePictureSelector from '@/components/profile-picture-selector';
 import { User } from '@/models/user';
 import { Project } from '@/models/project';
@@ -22,34 +22,47 @@ export default function ProfilePage() {
     const [projectsLoading, setProjectsLoading] = useState(false);
 
     useEffect(() => {
+        let userDataResponse: User;
+
         if (user?.uid) {
             getUserByFirebaseUid(user.uid)
                 .then((firebaseUserData) => {
-                    console.log('\u{1F511} Usuario obtenido por Firebase UID:', firebaseUserData);
+                    console.log('🔑 Usuario obtenido por Firebase UID:', firebaseUserData);
                     return getUser(firebaseUserData.id);
                 })
                 .then((data) => {
                     setUserData(data);
+                    userDataResponse = data;
+                    if (data.profile_picture === 1) {
+                        const providerPic = user?.photoURL || '/placeholder.svg?height=96&width=96';
+                        setProfilePicture(providerPic);
+                        return Promise.resolve(null);
+                    }
+                    if (data.profile_picture) {
+                        return getUserProfilePictureUrl(data.profile_picture);
+                    }
 
-                    const pic =
-            data.profile_picture === 1
-                ? user?.photoURL || '/placeholder.svg?height=96&width=96'
-                : data.profile_picture_url || '/placeholder.svg?height=96&width=96';
-                    setProfilePicture(pic);
+                    setProfilePicture('/placeholder.svg?height=96&width=96');
+                    return Promise.resolve(null);
+                })
+                .then((pictureUrl) => {
+                    if (pictureUrl) {
+                        setProfilePicture(pictureUrl);
+                    }
                     setProjectsLoading(true);
-                    return getUserProjects(data.id);
+                    return getUserProjects(userDataResponse.id);
                 })
                 .then((data) => {
                     setProjects(data);
                 })
                 .catch((err) => {
-                    console.error('\u274C Error al cargar perfil:', err);
+                    console.error('❌ Error al cargar perfil:', err);
                     setProjects([]);
+                    setProfilePicture('/placeholder.svg?height=96&width=96');
                 })
                 .finally(() => setProjectsLoading(false));
         }
     }, [user]);
-
     return (
         <div className="min-h-screen bg-[#f2f0eb]">
             <ResponsiveHeader />
@@ -62,7 +75,7 @@ export default function ProfilePage() {
                                     className="relative group w-24 h-24 cursor-pointer"
                                     onClick={() => setShowSelector(true)}
                                 >
-                                    <Avatar className="w-full h-full">
+                                    <Avatar className="w-full h-full  ">
                                         <AvatarImage src={profilePicture} />
                                         <AvatarFallback className="text-2xl">PV</AvatarFallback>
                                     </Avatar>
@@ -92,10 +105,20 @@ export default function ProfilePage() {
                                 <div className="bg-white rounded-2xl p-8 shadow-2xl">
                                     <h3 className="text-lg font-bold mb-4 text-[#3b3535]">Selecciona tu foto de perfil</h3>
                                     <ProfilePictureSelector
-                                        currentPicture={profilePicture}
-                                        onSelect={(url) => {
+                                        currentPictureId={userData?.profile_picture}
+                                        onSelect={(id, url) => {
                                             setProfilePicture(url);
                                             setShowSelector(false);
+                                            if (userData) {
+                                                updateUser(userData.id, { profile_picture: id })
+                                                    .then((updatedUser) => {
+                                                        setUserData(updatedUser); 
+                                                        console.log('✅ Foto de perfil guardada');
+                                                    })
+                                                    .catch((err) => {
+                                                        console.error('Error al guardar foto', err);
+                                                    });
+                                            }
                                         }}
                                     />
                                     <Button className="mt-4" variant="outline" onClick={() => setShowSelector(false)}>

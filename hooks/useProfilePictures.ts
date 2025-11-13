@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { listAll, getDownloadURL, ref } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { getProfilePictures } from '@/app/services/users';
+import { ProfilePicture } from '@/models/profile-picture';
 
 export function useProfilePictures() {
-    const [pictures, setPictures] = useState<string[]>([]);
+    const [pictures, setPictures] = useState<ProfilePicture[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
 
@@ -12,12 +12,8 @@ export function useProfilePictures() {
             setLoading(true);
             setError('');
             try {
-                const listRef = ref(storage, 'profile_pictures');
-                const res = await listAll(listRef);
-                const urls = await Promise.all(
-                    res.items.map(itemRef => getDownloadURL(itemRef))
-                );
-                setPictures(urls);
+                const pics = await getProfilePictures();
+                setPictures(pics);
             } catch (err: unknown) {
                 if (err instanceof Error) {
                     setError(err.message || 'Error al cargar imágenes');
