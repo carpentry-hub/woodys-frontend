@@ -175,6 +175,8 @@ function CreateProjectContent() {
         { value: 'fibrofacil', label: 'Fibrofácil' },
         { value: 'pino', label: 'Pino' },
         { value: 'roble', label: 'Roble' },
+        { value: 'fresno', label: 'Fresno' },
+        { value: 'otros', label: 'Otros' },
     ];
 
     const herramientasOptions = [

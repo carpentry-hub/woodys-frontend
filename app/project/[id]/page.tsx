@@ -495,24 +495,54 @@ export default function ProjectPage() {
                             {/* Rating y Botón de Descarga */}
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                                 {/* Calificación */}
-                                <div className="flex items-center p-4 border border-gray-200 rounded-xl bg-white/50">
-                                    <span className="text-xl font-bold text-[#3b3535]">{project.average_rating?.toFixed(1)}</span>
-                                    <div className="flex gap-1 ml-2 mr-2">
-                                        {[1, 2, 3, 4, 5].map((i) => (
-                                            <Star
-                                                key={i}
-                                                className={`w-5 h-5 cursor-pointer transition-colors ${
-                                                    (hoverRating || rating || Math.round(project.average_rating)) >= i
-                                                        ? 'fill-[#c1835a] text-[#c1835a]'
-                                                        : 'text-gray-300'
-                                                }`}
-                                                onClick={() => handleRateProject(i)}
-                                                onMouseEnter={() => setHoverRating(i)}
-                                                onMouseLeave={() => setHoverRating(0)}
-                                            />
-                                        ))}
-                                    </div>
-                                    <span className="text-gray-500 text-sm">({project.rating_count} valoraciones)</span>
+                                <div className="flex items-center p-4 border border-gray-200 rounded-xl bg-white/50 min-h-[72px]">
+                                    {/* Comprobamos si hay valoraciones */}
+                                    {(project.rating_count ?? 0) > 0 ? (
+                                        <>
+                                            {/* ESTADO CON VALORACIONES */}
+                                            <span className="text-xl font-bold text-[#3b3535]">
+                                                {project.average_rating?.toFixed(1)}
+                                            </span>
+                                            <div className="flex gap-1 ml-2 mr-2">
+                                                {[1, 2, 3, 4, 5].map((i) => (
+                                                    <Star
+                                                        key={i}
+                                                        className={`w-5 h-5 cursor-pointer transition-colors ${
+                                                            (hoverRating || rating || Math.round(project.average_rating ?? 0)) >= i
+                                                                ? 'fill-[#c1835a] text-[#c1835a]'
+                                                                : 'text-gray-300'
+                                                        }`}
+                                                        onClick={() => handleRateProject(i)}
+                                                        onMouseEnter={() => setHoverRating(i)}
+                                                        onMouseLeave={() => setHoverRating(0)}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <span className="text-gray-500 text-sm">({project.rating_count} valoraciones)</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {/* ESTADO SIN VALORACIONES */}
+                                            <div className="flex gap-1 mr-2">
+                                                {[1, 2, 3, 4, 5].map((i) => (
+                                                    <Star
+                                                        key={i}
+                                                        className={`w-5 h-5 cursor-pointer transition-colors ${
+                                                            (hoverRating || rating) >= i // Solo se ilumina si el usuario está interactuando
+                                                                ? 'fill-[#c1835a] text-[#c1835a]'
+                                                                : 'text-gray-300'
+                                                        }`}
+                                                        onClick={() => handleRateProject(i)}
+                                                        onMouseEnter={() => setHoverRating(i)}
+                                                        onMouseLeave={() => setHoverRating(0)}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <span className="text-gray-500 text-sm font-medium">
+                ¡Sé el primero en puntuar!
+                                            </span>
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* Botón de Descarga */}
