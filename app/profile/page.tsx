@@ -14,6 +14,7 @@ import ProfilePictureSelector from '@/components/profile-picture-selector';
 import { Project } from '@/models/project';
 import { Rating } from '@/models/rating';
 import ProjectCard from '@/components/project-card';
+import SaveToListModal from '@/components/save-to-list-modal'; // Importar el Modal
 
 export default function ProfilePage() {
     const { 
@@ -32,6 +33,9 @@ export default function ProfilePage() {
     const [newUsername, setNewUsername] = useState('');
     const [updateError, setUpdateError] = useState<string | null>(null);
     const [isUpdatingUsername, setIsUpdatingUsername] = useState(false);
+
+    const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+    const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
 
     useEffect(() => {
         if (appUser?.username) {
@@ -137,6 +141,11 @@ export default function ProfilePage() {
             console.error('Error al guardar foto', err);
             alert('No se pudo actualizar la imagen de perfil. Inténtalo de nuevo.');
         }
+    };
+
+    const handleSaveClick = (projectId: number) => {
+        setSelectedProjectId(projectId);
+        setIsSaveModalOpen(true);
     };
 
     return (
@@ -286,9 +295,10 @@ export default function ProfilePage() {
                                     {projects.map((project) => (
                                         <ProjectCard 
                                             key={project.id} 
-                                            project={project} 
+                                            project={project}
                                             author={appUser}
                                             authorImage={profilePictureUrl}
+                                            onSaveClick={handleSaveClick}
                                         />
                                     ))}
                                 </div>
@@ -302,6 +312,13 @@ export default function ProfilePage() {
                     </div>
                 </div>
             </div>
+
+            {isSaveModalOpen && selectedProjectId && (
+                <SaveToListModal
+                    projectId={selectedProjectId}
+                    onClose={() => setIsSaveModalOpen(false)}
+                />
+            )}
         </div>
     );
 }

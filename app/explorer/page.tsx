@@ -1,47 +1,80 @@
-
 'use client';
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Star, Filter, Clock, Heart, Loader2 } from 'lucide-react';
+import { Search, Star, Filter, Clock, Heart, Loader2, Bookmark } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { ProjectWithUser } from '@/models/project-with-user';
 import { useProjects } from '@/hooks/useProjects';
+import { useAuth } from '@/hooks/useAuth'; // 1. Importar useAuth
+import SaveToListModal from '@/components/save-to-list-modal'; // 2. Importar el Modal
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'; // 3. Importar Avatar
 
 // --- Componente de Tarjeta de Proyecto (ProjectCard) ---
-const ProjectCard = ({ project }: { project: ProjectWithUser }) => {
-    // Nota: La 'dificultad' no existe en el nuevo modelo, por lo que se elimina la lógica de color.
-    // Se puede recrear si se añade ese campo al backend.
+const ProjectCard = ({ 
+    project, 
+    onSaveClick 
+}: { 
+    project: ProjectWithUser, 
+    onSaveClick?: (projectId: number) => void 
+}) => {
+
+    const displayRating = (project.average_rating ?? 0) > 0
+        ? project.average_rating.toFixed(1)
+        : '-';
+
+    const handleSave = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (onSaveClick) {
+            onSaveClick(project.id);
+        }
+    };
 
     return (
         <Link href={`/project/${project.id}`} className="group">
-            <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1 h-full flex flex-col">
+            <div className="bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1 h-full flex flex-col relative">
                 <div className="aspect-[4/3] relative overflow-hidden">
                     <Image
-                        // ✅ SOLUCIÓN: Usamos `project.portrait` o la primera imagen del array `images`
                         src={project.portrait || (project.images && project.images[0]) || 'https://placehold.co/400x300/f2f0eb/3b3535?text=Woody\'s'}
                         alt={project.title}
                         width={400}
                         height={300}
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute top-3 right-3 bg-white/90 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Heart className="w-4 h-4 text-[#c1835a]" />
-                    </div>
+                    
+                    {onSaveClick && (
+                        <button
+                            onClick={handleSave}
+                            className="absolute top-3 right-3 bg-white/90 rounded-full p-2 z-10 transition-colors hover:bg-white hover:text-[#c1835a]"
+                            title="Guardar en favoritos"
+                        >
+                            <Bookmark className="w-4 h-4 text-[#3b3535] group-hover:text-[#c1835a]" />
+                        </button>
+                    )}
+                    
+                    {project.time_to_build > 0 && (
+                        <div className="absolute bottom-3 left-3">
+                            <Badge className="text-xs bg-[#f3f0eb] text-[#c89c6b]">
+                                {project.time_to_build} hs
+                            </Badge>
+                        </div>
+                    )}
                 </div>
                 <div className="p-4 flex flex-col flex-grow">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex flex-wrap gap-1">
-                            {/* Mostramos el primer estilo como badge principal */}
                             {project.style && project.style[0] && (
-                                <Badge className="text-xs bg-blue-100 text-blue-800">{project.style[0]}</Badge>
+                                <Badge className="text-xs bg-[#656b48]/20 text-[#3b3535] border border-[#656b48]/30">
+                                    {project.style[0]}
+                                </Badge>
                             )}
                         </div>
                         <div className="flex items-center space-x-1 text-gray-500 text-sm">
                             <Clock className="w-3 h-3" />
-                            {/* Mostramos el tiempo de construcción */}
                             <span>{project.time_to_build} hs</span>
                         </div>
                     </div>
@@ -50,18 +83,17 @@ const ProjectCard = ({ project }: { project: ProjectWithUser }) => {
                     </h3>
                     <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center space-x-2">
-                            <Image
-                                src={'/placeholder-user.jpg'}
-                                alt={project.owner.username}
-                                width={24}
-                                height={24}
-                                className="rounded-full"
-                            />
-                            <span className="text-sm text-gray-500">{project.owner.username}</span>
+                            <Avatar className="w-6 h-6">
+                                <AvatarImage src={project.owner.profile_picture_url || undefined} />
+                                <AvatarFallback className="text-xs bg-[#f6f6f6]">
+                                    {project.owner.username?.[0]?.toUpperCase() || 'U'}
+                                </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm text-gray-500">{project.owner.username || 'Anónimo'}</span>
                         </div>
                         <div className="flex items-center space-x-1 text-sm text-gray-500">
-                            <Star className="w-4 h-4 fill-[#c1835a] text-[#c1835a]" />
-                            <span>{project.average_rating.toFixed(1)} ({project.rating_count})</span>
+                            <Star className={`w-4 h-4 text-[#c1835a] ${ (project.average_rating ?? 0) > 0 ? 'fill-[#c1835a]' : 'fill-none' }`} />
+                            <span>{displayRating} ({project.rating_count})</span>
                         </div>
                     </div>
                 </div>
@@ -82,6 +114,19 @@ export default function ExplorerPage() {
         handleFilterChange,
         filterOptions,
     } = useProjects();
+
+    const { appUser } = useAuth();
+    const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+    const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+
+    const handleSaveClick = (projectId: number) => {
+        if (!appUser) {
+            alert('Debes iniciar sesión para guardar proyectos.');
+            return;
+        }
+        setSelectedProjectId(projectId);
+        setIsSaveModalOpen(true);
+    };
 
     return (
         <div className="min-h-screen bg-[#f2f0eb]">
@@ -105,7 +150,6 @@ export default function ExplorerPage() {
                         </div>
                     </div>
 
-                    {/* Filtros Dinámicos con Desplegables */}
                     <div className="mb-10 p-4 bg-white/50 rounded-lg">
                         <h2 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center"><Filter className="w-5 h-5 mr-2 text-[#c1835a]"/>Filtra tu búsqueda</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -130,7 +174,6 @@ export default function ExplorerPage() {
                         </div>
                     </div>
 
-                    {/* Grilla de Proyectos */}
                     <section>
                         <h2 className="text-3xl font-bold text-[#3b3535] mb-8">Proyectos Encontrados ({projects.length})</h2>
 
@@ -146,8 +189,11 @@ export default function ExplorerPage() {
                         ) : projects.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                                 {projects.map(project => (
-                                    // ✅ La key ahora es project.id (numérico)
-                                    <ProjectCard key={project.id} project={project} />
+                                    <ProjectCard 
+                                        key={project.id} 
+                                        project={project} 
+                                        onSaveClick={appUser ? handleSaveClick : undefined}
+                                    />
                                 ))}
                             </div>
                         ) : (
@@ -161,16 +207,23 @@ export default function ExplorerPage() {
                     <section className="my-20 bg-gradient-to-r from-[#656b48] to-[#3b3535] rounded-2xl p-12 text-center text-white">
                         <h2 className="text-3xl font-bold mb-4">¿Tienes una idea en mente?</h2>
                         <p className="text-xl mb-8 opacity-90">
-                           Únete a nuestra comunidad y comparte tu próximo proyecto con miles de makers.
+                            Únete a nuestra comunidad y comparte tu próximo proyecto con miles de makers.
                         </p>
                         <Link href="/my-projects">
                             <Button className="bg-white text-[#656b48] hover:bg-gray-100 px-8 py-3 text-lg font-semibold rounded-full">
-                              Publicar mi proyecto
+                                Publicar mi proyecto
                             </Button>
                         </Link>
                     </section>
                 </div>
             </div>
+
+            {isSaveModalOpen && selectedProjectId && (
+                <SaveToListModal
+                    projectId={selectedProjectId}
+                    onClose={() => setIsSaveModalOpen(false)}
+                />
+            )}
         </div>
     );
 }
