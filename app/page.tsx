@@ -234,9 +234,9 @@ export default function LandingPage() {
             {/* Featured Creators Section */}
             {/* --- Featured Creators Section / CTA --- */}
             <motion.section
-                ref={creatorsRef}
+                ref={whyRef}
                 initial={{ opacity: 0, y: 40 }}
-                animate={creatorsInView ? { opacity: 1, y: 0 } : {}}
+                animate={whyInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.7, ease: 'easeOut' }}
                 className="py-12 sm:py-16"
             >
@@ -310,32 +310,38 @@ export default function LandingPage() {
                 filterKey="style"
                 filterValue="vintage"
             />
-
-            {/* Final CTA Section */}
-            <section className="bg-[#656b48] py-12 sm:py-16">
-                <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">¿Listo para compartir tu próximo proyecto?</h2>
-                    <p className="text-lg sm:text-xl text-white/90 mb-6 sm:mb-8">
+            <motion.section
+                ref={creatorsRef}
+                initial={{ opacity: 0, y: 40 }}
+                animate={creatorsInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.7, ease: 'easeOut' }}
+            >
+                {/* Final CTA Section */}
+                <section className="bg-[#656b48] py-12 sm:py-16">
+                    <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center">
+                        <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">¿Listo para compartir tu próximo proyecto?</h2>
+                        <p className="text-lg sm:text-xl text-white/90 mb-6 sm:mb-8">
             Únete a miles de carpinteros que ya están construyendo el futuro de la carpintería sustentable
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Link href="/my-projects" className="w-full sm:w-auto">
-                            <Button className="w-full sm:w-auto bg-white text-[#656b48] hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full flex items-center justify-center space-x-2">
-                                <Plus className="w-5 h-5" />
-                                <span>Publicar mi primer proyecto</span>
-                            </Button>
-                        </Link>
-                        <Link href="/explorer" className="w-full sm:w-auto">
-                            <Button
-                                variant="outline"
-                                className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-[#656b48] px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full bg-transparent"
-                            >
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                            <Link href="/my-projects" className="w-full sm:w-auto">
+                                <Button className="w-full sm:w-auto bg-white text-[#656b48] hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full flex items-center justify-center space-x-2">
+                                    <Plus className="w-5 h-5" />
+                                    <span>Publicar mi primer proyecto</span>
+                                </Button>
+                            </Link>
+                            <Link href="/explorer" className="w-full sm:w-auto">
+                                <Button
+                                    variant="outline"
+                                    className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-[#656b48] px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full bg-transparent"
+                                >
                 Ver proyectos destacados
-                            </Button>
-                        </Link>
+                                </Button>
+                            </Link>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
+            </motion.section>
         </div>
     );
 }
