@@ -10,14 +10,28 @@ import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import FeaturedCategory from '@/components/featured-category';
 import { CommunityStats } from '@/components/landing/community-stats';
+import LoginModal from '@/components/login-modal';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function LandingPage() {
     useAuth();
+    const { user } = useAuth(); // <-- Cambia `useAuth()` por esto
+    const router = useRouter(); // <-- Añade el router
+    const [loginModalOpen, setLoginModalOpen] = useState(false);
     // Animation hooks for each section
     const [heroRef, heroInView] = useInView({ triggerOnce: true, threshold: 0.2 });
     const [whyRef, whyInView] = useInView({ triggerOnce: true, threshold: 0.2 });
     const [creatorsRef, creatorsInView] = useInView({ triggerOnce: true, threshold: 0.2 });
     const [finalRef, finalInView] = useInView({ triggerOnce: true, threshold: 0.2 });
+
+    const handleCreateProjectClick = () => {
+        if (user) {
+            router.push('/create-project');
+        } else {
+            setLoginModalOpen(true);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-[#f2f0eb]">
@@ -55,20 +69,22 @@ export default function LandingPage() {
                     </div>
 
                     {/* CTA Buttons */}
+                    {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 sm:mb-16 px-4">
-                        <Link href="/my-projects" className="w-full sm:w-auto">
-                            <Button className="w-full sm:w-auto bg-[#656b48] hover:bg-[#3b3535] text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full flex items-center justify-center space-x-2">
-                                <Plus className="w-5 h-5" />
-                                <span>Publica tu primer proyecto</span>
-                                <ArrowRight className="w-5 h-5 hidden sm:block" />
-                            </Button>
-                        </Link>
+                        <Button 
+                            className="w-full sm:w-auto bg-[#656b48] hover:bg-[#3b3535] text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full flex items-center justify-center space-x-2"
+                            onClick={handleCreateProjectClick}
+                        >
+                            <Plus className="w-5 h-5" />
+                            <span>Publica tu primer proyecto</span>
+                            <ArrowRight className="w-5 h-5 hidden sm:block" />
+                        </Button>
                         <Link href="/explorer" className="w-full sm:w-auto">
                             <Button
                                 variant="outline"
                                 className="w-full sm:w-auto border-[#c1835a] text-[#c1835a] hover:bg-[#c1835a] hover:text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full bg-transparent"
                             >
-                Explorar proyectos
+                                Explorar proyectos
                             </Button>
                         </Link>
                     </div>
@@ -211,11 +227,9 @@ export default function LandingPage() {
                                 <p className="text-base sm:text-lg text-[#676765] mb-8">
                         Al publicar tu proyecto, no solo compartes tu trabajo, sino que inspiras a miles de otros carpinteros. Construye tu reputación y conviértete en una parte fundamental de nuestra comunidad.
                                 </p>
-                                <Link href="/create-project">
-                                    <Button className="w-full sm:w-auto bg-[#c1835a] hover:bg-[#3b3535] text-white px-6 sm:px-8 py-3 rounded-full text-base font-semibold">
+                                <Button onClick={handleCreateProjectClick} className="w-full sm:w-auto bg-[#c1835a] hover:bg-[#3b3535] text-white px-6 sm:px-8 py-3 rounded-full text-base font-semibold">
                             Publica tu proyecto ahora
-                                    </Button>
-                                </Link>
+                                </Button>
                             </div>
 
                             {/* Columna 2: Collage de Imágenes */}
@@ -282,24 +296,31 @@ export default function LandingPage() {
             Únete a miles de carpinteros que ya están construyendo el futuro de la carpintería sustentable
                         </p>
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link href="/my-projects" className="w-full sm:w-auto">
-                                <Button className="w-full sm:w-auto bg-white text-[#656b48] hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full flex items-center justify-center space-x-2">
-                                    <Plus className="w-5 h-5" />
-                                    <span>Publicar mi primer proyecto</span>
-                                </Button>
-                            </Link>
+                            <Button 
+                                className="w-full sm:w-auto bg-white text-[#656b48] hover:bg-gray-100 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full flex items-center justify-center space-x-2"
+                                onClick={handleCreateProjectClick}
+                            >
+                                <Plus className="w-5 h-5" />
+                                <span>Publicar mi primer proyecto</span>
+                            </Button>
                             <Link href="/explorer" className="w-full sm:w-auto">
                                 <Button
                                     variant="outline"
                                     className="w-full sm:w-auto border-white text-white hover:bg-white hover:text-[#656b48] px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full bg-transparent"
                                 >
-                Ver proyectos destacados
+            Ver proyectos destacados
                                 </Button>
                             </Link>
                         </div>
                     </div>
                 </section>
             </motion.section>
+            {loginModalOpen && (
+                <LoginModal
+                    open={loginModalOpen}
+                    onClose={() => setLoginModalOpen(false)}
+                />
+            )}
         </div>
     );
 }
