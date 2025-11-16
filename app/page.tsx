@@ -195,12 +195,10 @@ export default function LandingPage() {
                     </div>
 
                     <div className="text-center px-4 flex justify-center">
-                        <Link href="/my-projects">
-                            <Button className="w-full sm:w-auto bg-[#656b48] hover:bg-[#3b3535] text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full flex items-center justify-center space-x-2">
-                                <Plus className="w-5 h-5" />
-                                <span>Comenzar ahora - Es gratis</span>
-                            </Button>
-                        </Link>
+                        <Button onClick={handleCreateProjectClick} className="w-full sm:w-auto bg-[#656b48] hover:bg-[#3b3535] text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold rounded-full flex items-center justify-center space-x-2">
+                            <Plus className="w-5 h-5" />
+                            <span>Comenzar ahora - Es gratis</span>
+                        </Button>
                     </div>
                 </div>
             </motion.section>
