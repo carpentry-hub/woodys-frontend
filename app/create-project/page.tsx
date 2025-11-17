@@ -336,17 +336,66 @@ function CreateProjectContent() {
             setSubmitError('Debes estar autenticado para esta acción.');
             return;
         }
+
+        setSubmitError(null); 
+        
+
         if (!formData.title.trim()) {
             setSubmitError('El título es obligatorio');
             return;
         }
-        if (!formData.description.trim()) {
+        
+        if (!formData.altura.trim()) {
+            setSubmitError('La altura es obligatoria');
+            return;
+        }
+        if (!formData.ancho.trim()) {
+            setSubmitError('El ancho es obligatorio');
+            return;
+        }
+        if (!formData.description.trim() || formData.description === '<p><br></p>') {
             setSubmitError('La descripción es obligatoria');
             return;
         }
+        if (!formData.materialPrincipal.trim()) {
+            setSubmitError('El material principal es obligatorio');
+            return;
+        }
+
+        if (!isEditMode && !uploadedFiles.coverImage.file) {
+            setSubmitError('La imagen de portada es obligatoria');
+            return;
+        }        
+
+
+        if (!isEditMode && !uploadedFiles.tutorialFile) {
+            setSubmitError('El archivo del tutorial es obligatorio');
+            return;
+        }
+        
+        if (formData.estilos.length === 0) {
+            setSubmitError('Debes seleccionar al menos un estilo');
+            return;
+        }
+        if (formData.materiales.length === 0) {
+            setSubmitError('Debes seleccionar al menos un material');
+            return;
+        }
+        if (formData.herramientas.length === 0) {
+            setSubmitError('Debes seleccionar al menos una herramienta');
+            return;
+        }
+        if (!formData.tiempoArmado.trim()) {
+            setSubmitError('El tiempo de armado es obligatorio');
+            return;
+        }
+        if (!formData.ambiente.trim()) {
+            setSubmitError('El ambiente es obligatorio');
+            return;
+        }
+        
 
         setIsSubmitting(true);
-        setSubmitError(null);
 
         try {
             if (isEditMode && projectId && existingProject) {
@@ -398,17 +447,11 @@ function CreateProjectContent() {
 
             } else {
                 
-                if (!uploadedFiles.coverImage.file) {
-                    setSubmitError('La imagen de portada es obligatoria');
-                    setIsSubmitting(false);
-                    return;
-                }
-                
                 const currentUser = await getCurrentUserFromDB();
                 const projectTempId = Date.now().toString();
         
                 const portraitUrl = await uploadFile(
-                    uploadedFiles.coverImage.file,
+                    uploadedFiles.coverImage.file!, 
                     `projects/${projectTempId}/portrait`
                 );
 
