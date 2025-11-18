@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Star, Filter, Clock, Loader2, Bookmark } from 'lucide-react';
@@ -14,14 +14,16 @@ import SaveToListModal from '@/components/save-to-list-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import LoginModal from '@/components/login-modal';
 import { useRouter } from 'next/navigation';
+import { getUser, getUserProfilePictureUrl } from '@/app/services/users';
+import { getProjectRatings } from '@/app/services/ratings';
+import { Rating } from '@/models/rating';
+import { Project } from '@/models/project';
 
-// Función para capitalizar (ej: "japandi" -> "Japandi")
 const capitalize = (s: string) => {
     if (!s) return '';
     return s.charAt(0).toUpperCase() + s.slice(1);
-}
+};
 
-// --- Componente de Tarjeta de Proyecto (ProjectCard) ---
 const ProjectCard = ({ 
     project, 
     onSaveClick 
@@ -101,7 +103,7 @@ const ProjectCard = ({
                         </div>
                         <div className="flex items-center space-x-1 text-sm text-gray-500">
                             <Star className={`w-4 h-4 text-[#c1835a] ${ (project.average_rating ?? 0) > 0 ? 'fill-[#c1835a]' : 'fill-none' }`} />
-                            <span>{displayRating} ({project.rating_count})</span>
+                            <span>{displayRating} ({project.rating_count || 0})</span>
                         </div>
                     </div>
                 </div>
@@ -110,11 +112,10 @@ const ProjectCard = ({
     );
 };
 
-
 export default function ExplorerPage() {
     const {
         projects,
-        loading,
+        loading: loadingProjects,
         error,
         searchTerm,
         setSearchTerm,
@@ -128,6 +129,58 @@ export default function ExplorerPage() {
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
     const [loginModalOpen, setLoginModalOpen] = useState(false);
+
+    const [enrichedProjects, setEnrichedProjects] = useState<ProjectWithUser[]>([]);
+    const [enriching, setEnriching] = useState(false);
+
+    useEffect(() => {
+        const enrichData = async () => {
+            if (projects.length === 0) {
+                setEnrichedProjects([]);
+                return;
+            }
+
+            setEnriching(true);
+
+            try {
+                const projectsWithData = await Promise.all(
+                    projects.map(async (project: ProjectWithUser | Project) => {
+                        const userId = typeof project.owner === 'object' ? project.owner.id : project.owner;
+                        const userData = await getUser(userId);
+                        
+                        const ratings = await getProjectRatings(project.id);
+                        const avg = ratings.reduce((acc: number, rating: Rating) => acc + rating.value, 0);
+                        const averageRating = ratings.length > 0 ? avg / ratings.length : 0;
+                        const ratingCount = ratings.length;
+
+                        let profilePicUrl: string | null = null;
+                        if (userData.profile_picture && userData.profile_picture > 1) {
+                            profilePicUrl = await getUserProfilePictureUrl(userData.profile_picture);
+                        }
+                        
+                        const ownerWithPic = { ...userData, profile_picture_url: profilePicUrl };
+
+                        return { 
+                            ...project, 
+                            owner: ownerWithPic, 
+                            average_rating: averageRating, 
+                            rating_count: ratingCount 
+                        } as ProjectWithUser;
+                    })
+                );
+                setEnrichedProjects(projectsWithData);
+            } catch (err) {
+                console.error('Error fetching additional data:', err);
+                setEnrichedProjects(projects as ProjectWithUser[]);
+            } finally {
+                setEnriching(false);
+            }
+        };
+
+        if (!loadingProjects) {
+            enrichData();
+        }
+    }, [projects, loadingProjects]);
 
     const handleSaveClick = (projectId: number) => {
         if (!appUser) {
@@ -145,6 +198,8 @@ export default function ExplorerPage() {
             setLoginModalOpen(true);
         }
     };
+
+    const isLoading = loadingProjects || enriching;
 
     return (
         <div className="min-h-screen bg-[#f2f0eb]">
@@ -193,9 +248,11 @@ export default function ExplorerPage() {
                     </div>
 
                     <section>
-                        <h2 className="text-3xl font-bold text-[#3b3535] mb-8">Proyectos Encontrados ({projects.length})</h2>
+                        <h2 className="text-3xl font-bold text-[#3b3535] mb-8">
+                            Proyectos Encontrados ({enrichedProjects.length})
+                        </h2>
 
-                        {loading ? (
+                        {isLoading ? (
                             <div className="flex justify-center items-center py-20">
                                 <Loader2 className="w-12 h-12 text-[#c1835a] animate-spin" />
                             </div>
@@ -204,9 +261,9 @@ export default function ExplorerPage() {
                                 <h3 className="text-2xl font-semibold text-red-700">¡Ups! Algo salió mal</h3>
                                 <p className="text-red-600 mt-2">{error}</p>
                             </div>
-                        ) : projects.length > 0 ? (
+                        ) : enrichedProjects.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                {projects.map(project => (
+                                {enrichedProjects.map(project => (
                                     <ProjectCard 
                                         key={project.id} 
                                         project={project} 
