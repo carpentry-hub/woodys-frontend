@@ -46,7 +46,7 @@ function CommentItem({
     
     const isAuthor = comment.user_id === projectOwnerId;
 
-    // Función para formatear fecha y hora
+    // Formato de fecha y hora: 18/11/2025 21:30
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleString('es-ES', {
             day: '2-digit',
@@ -54,7 +54,7 @@ function CommentItem({
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-            hour12: false // Ponlo en true si prefieres formato AM/PM
+            hour12: false 
         });
     };
 
@@ -80,7 +80,6 @@ function CommentItem({
                                     </Badge>
                                 )}
                             </div>
-                            {/* AQUI SE MUESTRA LA FECHA Y HORA */}
                             <span className="text-xs text-gray-400">
                                 {formatDate(comment.created_at)}
                             </span>
@@ -147,7 +146,10 @@ export default function ProjectPage() {
     const router = useRouter();
     const projectId = Number(params?.id);
     const [project, setProject] = useState<Project | null>(null);
-    const [author, setAuthor] = useState<User | null>(null);
+    
+    // Extendemos el tipo User localmente para incluir la URL de la foto si no está en el modelo base
+    const [author, setAuthor] = useState<(User & { profile_picture_url?: string | null }) | null>(null);
+    
     const [loading, setLoading] = useState(true);
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
@@ -202,7 +204,7 @@ export default function ProjectPage() {
                 try {
                     profilePicUrl = await getUserProfilePictureUrl(userData.profile_picture);
                 } catch (e) {
-                    console.error('Error loading pfp for comment', e);
+                    console.error("Error loading pfp for comment", e);
                 }
             }
             
@@ -375,10 +377,16 @@ export default function ProjectPage() {
                 if (processedProject.owner) {
                     const user = await getUser(processedProject.owner);
                     
+                    // --- LOGICA PARA CARGAR FOTO DEL AUTOR DEL PROYECTO ---
                     let authorPicUrl = null;
                     if (user.profile_picture && user.profile_picture > 1) {
-                        authorPicUrl = await getUserProfilePictureUrl(user.profile_picture);
+                        try {
+                            authorPicUrl = await getUserProfilePictureUrl(user.profile_picture);
+                        } catch(e) {
+                            console.error("Error loading author pfp", e);
+                        }
                     }
+                    // Guardamos el usuario con la URL extra
                     setAuthor({ ...user, profile_picture_url: authorPicUrl });
 
                     try {
@@ -390,7 +398,7 @@ export default function ProjectPage() {
                                     const projectRatings = await getProjectRatings(userProject.id);
                                     allRatings.push(...projectRatings);
                                 } catch (error) {
-                                    console.error('Error fetching ratings:', error);
+                                    console.error(`Error fetching ratings:`, error);
                                 }
                             }
                             if (allRatings.length > 0) {
@@ -515,21 +523,28 @@ export default function ProjectPage() {
                         </div>
 
                         <div className="lg:col-span-2 space-y-6">
+                            {/* TARJETA DE AUTOR CORREGIDA */}
                             {author && (
                                 <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
                                     <h3 className="text-lg font-semibold text-[#3b3535] mb-3">Autor</h3>
                                     <div className="flex items-center space-x-3">
                                         <Avatar className="w-12 h-12">
-                                            <AvatarImage />
-                                            <AvatarFallback>{author.username[0]?.toUpperCase()}</AvatarFallback>
+                                            {/* AQUI ESTA LA CLAVE: Usar la URL cargada */}
+                                            <AvatarImage src={author.profile_picture_url || undefined} />
+                                            <AvatarFallback className="bg-[#f2f0eb] text-[#3b3535]">
+                                                {author.username?.[0]?.toUpperCase()}
+                                            </AvatarFallback>
                                         </Avatar>
                                         <div>
                                             <p className="font-semibold text-md text-[#3b3535]">{author.username}</p>
-                                            <span className="text-sm text-gray-500">Reputación: {calculatedReputation !== null ? calculatedReputation.toFixed(1) : (author.reputation || 0).toFixed(1)}</span>
+                                            <span className="text-sm text-gray-500">
+                                                Reputación: {calculatedReputation !== null ? calculatedReputation.toFixed(1) : (author.reputation || 0).toFixed(1)}
+                                            </span>
                                         </div>
                                     </div>
                                 </div>
                             )}
+                            
                             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
                                 <h3 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center"><Palette className="w-4 h-4 mr-2"/> Estilos</h3>
                                 <div className="flex flex-wrap gap-2">{project.style.map((s, i) => <Badge key={i} variant="secondary" className="bg-[#656b48]/20 text-[#3b3535]">{s}</Badge>)}</div>
@@ -538,11 +553,11 @@ export default function ProjectPage() {
                                 <h3 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center"><CheckSquare className="w-4 h-4 mr-2"/> Materiales</h3>
                                 <div className="flex flex-wrap gap-2">{project.materials.map((m, i) => <Badge key={i} variant="secondary" className="bg-[#e4d5c5] text-[#9a6a49]">{m}</Badge>)}</div>
                             </div>
-                            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+                             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
                                 <h3 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center"><Wrench className="w-4 h-4 mr-2"/> Herramientas</h3>
                                 <div className="flex flex-wrap gap-2">{project.tools.map((t, i) => <Badge key={i} variant="secondary" className="bg-gray-200 text-gray-800">{t}</Badge>)}</div>
                             </div>
-                            <div className="grid grid-cols-1 gap-4">
+                             <div className="grid grid-cols-1 gap-4">
                                 <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
                                     <h3 className="text-lg font-semibold text-[#3b3535] mb-2 flex items-center"><Clock className="w-4 h-4 mr-2"/> Tiempo de armado</h3>
                                     <div className="flex items-center pl-6"><strong className="text-sm">{project.time_to_build} hs</strong></div>
@@ -595,7 +610,7 @@ export default function ProjectPage() {
                                         setReplyContent={setReplyContent}
                                         handleReplySubmit={handleReplySubmit}
                                         depth={0}
-                                        projectOwnerId={project.owner} // Pasamos el ID del dueño al componente
+                                        projectOwnerId={project.owner}
                                     />
                                 ))
                             ) : (
