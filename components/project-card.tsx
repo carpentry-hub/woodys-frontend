@@ -3,23 +3,24 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation'; // 1. Importamos useRouter
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Star, Loader2, Bookmark, Eye, EyeOff, Clock } from 'lucide-react';
 import { Project } from '@/models/project';
 import { User } from '@/models/user';
 import { getUser, getUserProfilePictureUrl } from '@/app/services/users';
-import { ProjectWithUser } from '@/models/project-with-user'; // Importar el tipo enriquecido
+import { ProjectWithUser } from '@/models/project-with-user';
 
 interface ProjectCardProps {
-  project: Project | ProjectWithUser; // Aceptar ambos tipos
-  href?: string;
-  isOwner?: boolean;
-  onVisibilityChange?: (projectId: number, isPublic: boolean) => void;
-  isChangingVisibility?: boolean;
-  onSaveClick?: (projectId: number) => void;
-  author?: User | null; // Dejar las props opcionales por si las usas
-  authorImage?: string | null;
+    project: Project | ProjectWithUser;
+    href?: string;
+    isOwner?: boolean;
+    onVisibilityChange?: (projectId: number, isPublic: boolean) => void;
+    isChangingVisibility?: boolean;
+    onSaveClick?: (projectId: number) => void;
+    author?: User | null;
+    authorImage?: string | null;
 }
 
 export default function ProjectCard({ 
@@ -31,6 +32,7 @@ export default function ProjectCard({
     onSaveClick,
 }: ProjectCardProps) {
 
+    const router = useRouter(); // 2. Inicializamos el router
     const [author, setAuthor] = useState<User | null>(null);
     const [authorImage, setAuthorImage] = useState<string | null>(null);
     const [authorLoading, setAuthorLoading] = useState(true);
@@ -92,6 +94,17 @@ export default function ProjectCard({
         e.stopPropagation();
         if (onSaveClick) {
             onSaveClick(project.id);
+        }
+    };
+
+    // 3. Nueva función para manejar el clic en el autor
+    const handleAuthorClick = (e: React.MouseEvent) => {
+        e.preventDefault(); // Evita abrir el proyecto
+        e.stopPropagation(); // Evita burbujeo del evento
+        
+        // Navegamos manualmente al perfil si tenemos el autor
+        if (author && author.id) {
+            router.push(`/profile/${author.id}`);
         }
     };
 
@@ -166,7 +179,12 @@ export default function ProjectCard({
                         {project.title}
                     </h3>
                     <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center space-x-2">
+                        {/* 4. Asignamos el evento onClick al contenedor del autor */}
+                        <div 
+                            className="flex items-center space-x-2 cursor-pointer hover:opacity-80 transition-opacity z-10"
+                            onClick={handleAuthorClick}
+                            title="Ver perfil del autor"
+                        >
                             <Avatar className="w-6 h-6">
                                 <AvatarImage src={authorImage || undefined} />
                                 <AvatarFallback className="text-xs bg-[#f6f6f6]">
@@ -176,13 +194,14 @@ export default function ProjectCard({
                                     }
                                 </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm text-gray-500">
+                            <span className="text-sm text-gray-500 hover:text-[#c1835a] hover:underline">
                                 {authorLoading 
                                     ? 'Cargando...'
                                     : (author?.username || 'Anónimo')
                                 }
                             </span>
                         </div>
+
                         <div className="flex items-center space-x-1 text-sm text-gray-500">
                             <Star className={`w-4 h-4 text-[#c1835a] ${ (project.average_rating ?? 0) > 0 ? 'fill-[#c1835a]' : 'fill-none' }`} />
                             <span>{displayRating} ({project.rating_count})</span>

@@ -31,6 +31,7 @@ const ProjectCard = ({
     project: ProjectWithUser, 
     onSaveClick?: (projectId: number) => void 
 }) => {
+    const router = useRouter();
 
     const displayRating = (project.average_rating ?? 0) > 0
         ? project.average_rating.toFixed(1)
@@ -41,6 +42,15 @@ const ProjectCard = ({
         e.stopPropagation();
         if (onSaveClick) {
             onSaveClick(project.id);
+        }
+    };
+
+    const handleAuthorClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (project.owner && typeof project.owner === 'object' && 'id' in project.owner) {
+            router.push(`/profile/${project.owner.id}`);
         }
     };
 
@@ -92,14 +102,20 @@ const ProjectCard = ({
                         {project.title}
                     </h3>
                     <div className="flex items-center justify-between mt-2">
-                        <div className="flex items-center space-x-2">
+                        <div 
+                            className="flex items-center space-x-2 cursor-pointer hover:opacity-70 transition-opacity z-10"
+                            onClick={handleAuthorClick}
+                            title="Ver perfil del autor"
+                        >
                             <Avatar className="w-6 h-6">
                                 <AvatarImage src={project.owner.profile_picture_url || undefined} />
                                 <AvatarFallback className="text-xs bg-[#f6f6f6]">
                                     {project.owner.username?.[0]?.toUpperCase() || 'U'}
                                 </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm text-gray-500">{project.owner.username || 'Anónimo'}</span>
+                            <span className="text-sm text-gray-500 hover:text-[#c1835a] hover:underline">
+                                {project.owner.username || 'Anónimo'}
+                            </span>
                         </div>
                         <div className="flex items-center space-x-1 text-sm text-gray-500">
                             <Star className={`w-4 h-4 text-[#c1835a] ${ (project.average_rating ?? 0) > 0 ? 'fill-[#c1835a]' : 'fill-none' }`} />
@@ -111,6 +127,7 @@ const ProjectCard = ({
         </Link>
     );
 };
+
 
 export default function ExplorerPage() {
     const {
@@ -153,12 +170,19 @@ export default function ExplorerPage() {
                         const averageRating = ratings.length > 0 ? avg / ratings.length : 0;
                         const ratingCount = ratings.length;
 
-                        let profilePicUrl: string | null = null;
+                        // CORRECCIÓN AQUI: Usamos undefined en lugar de null
+                        let profilePicUrl: string | undefined = undefined;
+                        
                         if (userData.profile_picture && userData.profile_picture > 1) {
-                            profilePicUrl = await getUserProfilePictureUrl(userData.profile_picture);
+                            // Convertimos el posible null a undefined con || undefined
+                            const url = await getUserProfilePictureUrl(userData.profile_picture);
+                            profilePicUrl = url || undefined;
                         }
                         
-                        const ownerWithPic = { ...userData, profile_picture_url: profilePicUrl };
+                        const ownerWithPic = { 
+                            ...userData, 
+                            profile_picture_url: profilePicUrl 
+                        };
 
                         return { 
                             ...project, 
