@@ -12,6 +12,7 @@ export interface Comment {
 }
 
 export interface CommentWithUser extends Omit<Comment, 'user_id'> {
+    user_id: any;
     user: User;
 }
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, Grid3X3, List, Filter, Eye, Target, Loader2 } from 'lucide-react';
+import { Plus, Grid3X3, List, Eye, Target, Loader2 } from 'lucide-react';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserProjects } from '../services/users'; // Asumo que updateProject está en services/users o projects

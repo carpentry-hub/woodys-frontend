@@ -19,6 +19,7 @@ import DOMPurify from 'dompurify';
 import { Comment, CommentWithUser } from '@/models/comment';
 import { Rating } from '@/models/rating';
 import SaveToListModal from '@/components/save-to-list-modal';
+import Link from 'next/link'; // <--- IMPORTANTE: Importamos Link
 
 // --- Componente Individual de Comentario ---
 function CommentItem({ 
@@ -46,7 +47,6 @@ function CommentItem({
     
     const isAuthor = comment.user_id === projectOwnerId;
 
-    // Formato de fecha y hora: 18/11/2025 21:30
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleString('es-ES', {
             day: '2-digit',
@@ -61,19 +61,25 @@ function CommentItem({
     return (
         <div className={`py-4 ${borderClass}`} style={indentStyle}>
             <div className="flex space-x-4">
-                <Avatar className={`w-10 h-10 ${isAuthor ? 'border-2 border-[#c1835a]' : ''}`}>
-                    <AvatarImage src={comment.user?.profile_picture_url || undefined} />
-                    <AvatarFallback className="bg-[#f2f0eb] text-[#3b3535]">
-                        {comment.user?.username?.[0]?.toUpperCase() || '?'}
-                    </AvatarFallback>
-                </Avatar>
+                {/* --- ENLACE AL PERFIL EN EL AVATAR DEL COMENTARIO --- */}
+                <Link href={`/profile/${comment.user_id}`}>
+                    <Avatar className={`w-10 h-10 cursor-pointer transition-opacity hover:opacity-80 ${isAuthor ? 'border-2 border-[#c1835a]' : ''}`}>
+                        <AvatarImage src={comment.user?.profile_picture_url || undefined} />
+                        <AvatarFallback className="bg-[#f2f0eb] text-[#3b3535]">
+                            {comment.user?.username?.[0]?.toUpperCase() || '?'}
+                        </AvatarFallback>
+                    </Avatar>
+                </Link>
+
                 <div className="flex-1">
                     <div className={`p-4 rounded-2xl rounded-tl-none border shadow-sm ${isAuthor ? 'bg-[#c1835a]/5 border-[#c1835a]/20' : 'bg-white/60 border-gray-100'}`}>
                         <div className="flex justify-between items-center mb-2">
                             <div className="flex items-center gap-2">
-                                <p className="font-bold text-[#3b3535] text-sm">
+                                {/* --- ENLACE AL PERFIL EN EL NOMBRE DEL COMENTARIO --- */}
+                                <Link href={`/profile/${comment.user_id}`} className="font-bold text-[#3b3535] text-sm hover:text-[#c1835a] hover:underline">
                                     {comment.user?.username}
-                                </p>
+                                </Link>
+                                
                                 {isAuthor && (
                                     <Badge variant="secondary" className="bg-[#c1835a] text-white hover:bg-[#a06d4b] text-[10px] h-5 px-1.5 font-medium border-none">
                                         Autor
@@ -146,10 +152,7 @@ export default function ProjectPage() {
     const router = useRouter();
     const projectId = Number(params?.id);
     const [project, setProject] = useState<Project | null>(null);
-    
-    // Extendemos el tipo User localmente para incluir la URL de la foto si no está en el modelo base
     const [author, setAuthor] = useState<(User & { profile_picture_url?: string | null }) | null>(null);
-    
     const [loading, setLoading] = useState(true);
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
@@ -204,7 +207,7 @@ export default function ProjectPage() {
                 try {
                     profilePicUrl = await getUserProfilePictureUrl(userData.profile_picture);
                 } catch (e) {
-                    console.error("Error loading pfp for comment", e);
+                    console.error('Error loading pfp for comment', e);
                 }
             }
             
@@ -377,16 +380,10 @@ export default function ProjectPage() {
                 if (processedProject.owner) {
                     const user = await getUser(processedProject.owner);
                     
-                    // --- LOGICA PARA CARGAR FOTO DEL AUTOR DEL PROYECTO ---
                     let authorPicUrl = null;
                     if (user.profile_picture && user.profile_picture > 1) {
-                        try {
-                            authorPicUrl = await getUserProfilePictureUrl(user.profile_picture);
-                        } catch(e) {
-                            console.error("Error loading author pfp", e);
-                        }
+                        authorPicUrl = await getUserProfilePictureUrl(user.profile_picture);
                     }
-                    // Guardamos el usuario con la URL extra
                     setAuthor({ ...user, profile_picture_url: authorPicUrl });
 
                     try {
@@ -398,7 +395,7 @@ export default function ProjectPage() {
                                     const projectRatings = await getProjectRatings(userProject.id);
                                     allRatings.push(...projectRatings);
                                 } catch (error) {
-                                    console.error(`Error fetching ratings:`, error);
+                                    console.error('Error fetching ratings:', error);
                                 }
                             }
                             if (allRatings.length > 0) {
@@ -523,28 +520,30 @@ export default function ProjectPage() {
                         </div>
 
                         <div className="lg:col-span-2 space-y-6">
-                            {/* TARJETA DE AUTOR CORREGIDA */}
                             {author && (
                                 <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
                                     <h3 className="text-lg font-semibold text-[#3b3535] mb-3">Autor</h3>
                                     <div className="flex items-center space-x-3">
-                                        <Avatar className="w-12 h-12">
-                                            {/* AQUI ESTA LA CLAVE: Usar la URL cargada */}
-                                            <AvatarImage src={author.profile_picture_url || undefined} />
-                                            <AvatarFallback className="bg-[#f2f0eb] text-[#3b3535]">
-                                                {author.username?.[0]?.toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
+                                        {/* --- ENLACE AL PERFIL EN EL SIDEBAR DEL AUTOR --- */}
+                                        <Link href={`/profile/${author.id}`}>
+                                            <Avatar className="w-12 h-12 cursor-pointer hover:opacity-80 transition-opacity">
+                                                <AvatarImage src={author.profile_picture_url || undefined} />
+                                                <AvatarFallback className="bg-[#f2f0eb] text-[#3b3535]">
+                                                    {author.username?.[0]?.toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        </Link>
                                         <div>
-                                            <p className="font-semibold text-md text-[#3b3535]">{author.username}</p>
-                                            <span className="text-sm text-gray-500">
+                                            <Link href={`/profile/${author.id}`} className="font-semibold text-md text-[#3b3535] hover:text-[#c1835a] hover:underline">
+                                                {author.username}
+                                            </Link>
+                                            <span className="text-sm text-gray-500 block">
                                                 Reputación: {calculatedReputation !== null ? calculatedReputation.toFixed(1) : (author.reputation || 0).toFixed(1)}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
                             )}
-                            
                             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
                                 <h3 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center"><Palette className="w-4 h-4 mr-2"/> Estilos</h3>
                                 <div className="flex flex-wrap gap-2">{project.style.map((s, i) => <Badge key={i} variant="secondary" className="bg-[#656b48]/20 text-[#3b3535]">{s}</Badge>)}</div>
@@ -553,11 +552,11 @@ export default function ProjectPage() {
                                 <h3 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center"><CheckSquare className="w-4 h-4 mr-2"/> Materiales</h3>
                                 <div className="flex flex-wrap gap-2">{project.materials.map((m, i) => <Badge key={i} variant="secondary" className="bg-[#e4d5c5] text-[#9a6a49]">{m}</Badge>)}</div>
                             </div>
-                             <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
+                            <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
                                 <h3 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center"><Wrench className="w-4 h-4 mr-2"/> Herramientas</h3>
                                 <div className="flex flex-wrap gap-2">{project.tools.map((t, i) => <Badge key={i} variant="secondary" className="bg-gray-200 text-gray-800">{t}</Badge>)}</div>
                             </div>
-                             <div className="grid grid-cols-1 gap-4">
+                            <div className="grid grid-cols-1 gap-4">
                                 <div className="border border-gray-200 rounded-xl p-4 bg-white/50">
                                     <h3 className="text-lg font-semibold text-[#3b3535] mb-2 flex items-center"><Clock className="w-4 h-4 mr-2"/> Tiempo de armado</h3>
                                     <div className="flex items-center pl-6"><strong className="text-sm">{project.time_to_build} hs</strong></div>
