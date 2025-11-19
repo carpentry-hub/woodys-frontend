@@ -34,7 +34,7 @@ export function CommunityStats() {
                     <StatCard
                         icon={Users}
                         value={`${stats.userCount}+`}
-                        label="Makers"
+                        label="Carpinteros"
                         iconBgColor="#c1835a1A"
                         iconColor="#c1835a"
                     />

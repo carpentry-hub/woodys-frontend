@@ -153,18 +153,6 @@ export default function MyProjectsPage() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 space-y-4 sm:space-y-0">
-                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-                        <Button variant="outline" className="flex items-center justify-center space-x-2 bg-transparent">
-                            <Filter className="w-4 h-4" />
-                            <span>Filtrar</span>
-                        </Button>
-                        <select className="px-3 py-2 bg-white border border-[#f6f6f6] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#c1835a]">
-                            <option>Más recientes</option>
-                            <option>Más populares</option>
-                            <option>Mejor valorados</option>
-                            <option>Más descargados</option>
-                        </select>
-                    </div>
                     <div className="flex items-center justify-center space-x-2">
                         <button
                             onClick={() => setViewMode('grid')}
