@@ -32,26 +32,29 @@ import {
     TutorialFileUploader
 } from '@/components/form/project-file-uploaders';
 import { Project } from '@/models/project';
+import { TermsModal } from '@/components/TermsModal';
 
 export type ImagePreview = {
-  id: string;
-  file: File | null;
-  preview: string;
+    id: string;
+    file: File | null;
+    preview: string;
 };
 
 type FormData = {
-  title: string,
-  altura: string,
-  largo: string,
-  ancho: string,
-  materialPrincipal: string,
-  description: string,
-  estilos: string[],
-  tiempoArmado: string,
-  materiales: string[],
-  herramientas: string[],
-  ambiente: string,
-  is_public: boolean
+    title: string,
+    altura: string,
+    largo: string,
+    ancho: string,
+    materialPrincipal: string,
+    description: string,
+    estilos: string[],
+    tiempoArmado: string,
+    materiales: string[],
+    herramientas: string[],
+    ambiente: string,
+    is_public: boolean,
+    declaracionVeracidad: boolean,
+    aceptacionTerminos: boolean
 }
 
 const MAX_SIZE_MB = 10;
@@ -64,12 +67,13 @@ function CreateProjectContent() {
     const searchParams = useSearchParams();
     const { user, appUser } = useAuth();
     const { uploadFile, uploadMultipleFiles, uploading } = useFileUpload();
-    
+
     const [isEditMode, setIsEditMode] = useState(false);
     const [projectId, setProjectId] = useState<number | null>(null);
     const [existingProject, setExistingProject] = useState<Project | null>(null);
     const [isPageLoading, setIsPageLoading] = useState(true);
     const [isDeleting, setIsDeleting] = useState(false);
+    const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
     const [formData, setFormData] = useState<FormData>({
         title: '',
@@ -84,6 +88,8 @@ function CreateProjectContent() {
         herramientas: [],
         ambiente: '',
         is_public: true,
+        declaracionVeracidad: false,
+        aceptacionTerminos: false
     });
 
     const [uploadedFiles, setUploadedFiles] = useState<{
@@ -111,13 +117,12 @@ function CreateProjectContent() {
             getProject(id)
                 .then(project => {
                     if (appUser && project.owner !== appUser.id) {
-                        console.error('Permiso denegado: No eres el dueño de este proyecto.');
                         router.push('/');
                         return;
                     }
-                    
+
                     setExistingProject(project);
-                    
+
                     setFormData({
                         title: project.title,
                         altura: project.height.toString(),
@@ -131,6 +136,8 @@ function CreateProjectContent() {
                         herramientas: project.tools,
                         ambiente: project.environment,
                         is_public: project.is_public,
+                        declaracionVeracidad: false,
+                        aceptacionTerminos: false
                     });
 
                     setUploadedFiles({
@@ -140,13 +147,12 @@ function CreateProjectContent() {
                             file: null,
                             preview: url
                         })),
-                        tutorialFile: null 
+                        tutorialFile: null
                     });
 
                     setIsPageLoading(false);
                 })
                 .catch(err => {
-                    console.error('Error al cargar el proyecto para editar:', err);
                     setIsPageLoading(false);
                     router.push('/');
                 });
@@ -155,8 +161,12 @@ function CreateProjectContent() {
         }
     }, [searchParams, appUser, user, router]);
 
-    const handleInputChange = (field: keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas' | 'is_public'>, value: string) => {
+    const handleInputChange = (field: keyof Omit<FormData, 'estilos' | 'materiales' | 'herramientas' | 'is_public' | 'declaracionVeracidad' | 'aceptacionTerminos'>, value: string) => {
         setFormData((prev) => ({ ...prev, [field]: value } as FormData));
+    };
+
+    const handleCheckboxChange = (field: 'declaracionVeracidad' | 'aceptacionTerminos', checked: boolean) => {
+        setFormData((prev) => ({ ...prev, [field]: checked } as FormData));
     };
 
     const estilosOptions = [
@@ -199,7 +209,6 @@ function CreateProjectContent() {
         { value: 'otros', label: 'Otros' },
     ];
 
-
     const handleMultiSelect = (field: 'estilos' | 'materiales' | 'herramientas', value: string) => {
         setFormData((prev) => {
             const exists = prev[field].includes(value);
@@ -225,12 +234,12 @@ function CreateProjectContent() {
         if (uploadedFiles.coverImage.preview) {
             URL.revokeObjectURL(uploadedFiles.coverImage.preview);
         }
-        
+
         if (!files || files.length === 0) {
             setUploadedFiles(prev => ({ ...prev, coverImage: { file: null, preview: null }}));
             return;
         }
-        
+
         const file = files[0];
         const error = validateFile(file);
 
@@ -319,7 +328,7 @@ function CreateProjectContent() {
         const newPreviews = uploadedFiles.images
             .filter(img => img.file !== null)
             .map(img => img.preview);
-        
+
         const coverPreview = uploadedFiles.coverImage.file ? uploadedFiles.coverImage.preview : null;
 
         return () => {
@@ -330,21 +339,19 @@ function CreateProjectContent() {
         };
     }, [uploadedFiles.coverImage, uploadedFiles.images]);
 
-
     const handleSubmit = async () => {
         if (!user || !appUser) {
             setSubmitError('Debes estar autenticado para esta acción.');
             return;
         }
 
-        setSubmitError(null); 
-        
+        setSubmitError(null);
 
         if (!formData.title.trim()) {
             setSubmitError('El título es obligatorio');
             return;
         }
-        
+
         if (!formData.altura.trim()) {
             setSubmitError('La altura es obligatoria');
             return;
@@ -362,17 +369,6 @@ function CreateProjectContent() {
             return;
         }
 
-        if (!isEditMode && !uploadedFiles.coverImage.file) {
-            setSubmitError('La imagen de portada es obligatoria');
-            return;
-        }        
-
-
-        if (!isEditMode && !uploadedFiles.tutorialFile) {
-            setSubmitError('El archivo del tutorial es obligatorio');
-            return;
-        }
-        
         if (formData.estilos.length === 0) {
             setSubmitError('Debes seleccionar al menos un estilo');
             return;
@@ -393,13 +389,32 @@ function CreateProjectContent() {
             setSubmitError('El ambiente es obligatorio');
             return;
         }
-        
+
+        if (!formData.declaracionVeracidad) {
+            setSubmitError('Debes declarar que la información es cierta y detallada');
+            return;
+        }
+
+        if (!formData.aceptacionTerminos) {
+            setSubmitError('Debes aceptar los Términos y Condiciones');
+            return;
+        }
+
+        if (!isEditMode && !uploadedFiles.coverImage.file) {
+            setSubmitError('La imagen de portada es obligatoria');
+            return;
+        }
+
+        if (!isEditMode && !uploadedFiles.tutorialFile) {
+            setSubmitError('El archivo del tutorial es obligatorio');
+            return;
+        }
 
         setIsSubmitting(true);
 
         try {
             if (isEditMode && projectId && existingProject) {
-                
+
                 let newPortraitUrl = null;
                 if (uploadedFiles.coverImage.file) {
                     newPortraitUrl = await uploadFile(
@@ -411,7 +426,7 @@ function CreateProjectContent() {
                 const newImageFiles = uploadedFiles.images
                     .map(img => img.file)
                     .filter((file): file is File => file !== null);
-                
+
                 let newImageUrls: string[] = [];
                 if (newImageFiles.length > 0) {
                     newImageUrls = await uploadMultipleFiles(
@@ -428,9 +443,8 @@ function CreateProjectContent() {
                     );
                 }
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const textData = mapFormDataToProject(formData, {} as any, appUser.id);
-                
+
                 const projectToUpdate: Project = {
                     ...existingProject,
                     ...textData,
@@ -441,17 +455,17 @@ function CreateProjectContent() {
                     ],
                     tutorial: newTutorialUrl || existingProject.tutorial,
                 };
-                
+
                 const updated = await updateProject(projectId, projectToUpdate);
                 router.push(`/project/${updated.id}`);
 
             } else {
-                
+
                 const currentUser = await getCurrentUserFromDB();
                 const projectTempId = Date.now().toString();
-        
+
                 const portraitUrl = await uploadFile(
-                    uploadedFiles.coverImage.file!, 
+                    uploadedFiles.coverImage.file!,
                     `projects/${projectTempId}/portrait`
                 );
 
@@ -475,10 +489,10 @@ function CreateProjectContent() {
                 const fileUrls = { portraitUrl, imageUrls, tutorialUrl };
                 const projectData = mapFormDataToProject(formData, fileUrls, currentUser.id);
                 const newProject = await createProject(projectData);
-        
+
                 router.push(`/project/${newProject.id}`);
             }
-        
+
         } catch (error: unknown) {
             if (error instanceof Error) {
                 setSubmitError(error.message);
@@ -498,7 +512,6 @@ function CreateProjectContent() {
             setSubmitError(null);
             try {
                 await deleteProject(projectId);
-                alert('Proyecto eliminado exitosamente.');
                 router.push('/profile');
             } catch (error: unknown) {
                 if (error instanceof Error) {
@@ -661,14 +674,14 @@ function CreateProjectContent() {
                                 </div>
                             )}
                         </div>
-                        
+
                         <hr className="border-[#c89c6b]/30" />
 
                         <div className="space-y-6">
                             <h3 className="text-xl font-semibold text-[#3b3535] border-b border-[#c89c6b]/50 pb-2">
                                 Clasificación y Detalles
                             </h3>
-                            
+
                             {[
                                 { key: 'estilos', label: 'Estilos', options: estilosOptions },
                                 { key: 'materiales', label: 'Materiales', options: materialesOptions },
@@ -739,15 +752,44 @@ function CreateProjectContent() {
                             </div>
                         </div>
 
+                        <hr className="border-[#c89c6b]/30" />
+
+                        <div className="space-y-4 p-5 bg-[#fcfbf9] rounded-md border border-[#c89c6b]/40">
+                            <div className="flex items-start">
+                                <input
+                                    type="checkbox"
+                                    id="declaracion_veracidad"
+                                    checked={formData.declaracionVeracidad}
+                                    onChange={(e) => handleCheckboxChange('declaracionVeracidad', e.target.checked)}
+                                    className="mt-1 h-5 w-5 rounded border-[#c89c6b] text-[#c89c6b] focus:ring-[#c89c6b]"
+                                />
+                                <label htmlFor="declaracion_veracidad" className="ml-3 block text-sm font-medium text-[#3b3535]">
+                                    Declaro bajo juramento que la información técnica, materiales y las advertencias de seguridad proporcionadas son ciertas, claras y detalladas (Ley 24.240).
+                                </label>
+                            </div>
+                            <div className="flex items-start">
+                                <input
+                                    type="checkbox"
+                                    id="aceptacion_terminos"
+                                    checked={formData.aceptacionTerminos}
+                                    onChange={(e) => handleCheckboxChange('aceptacionTerminos', e.target.checked)}
+                                    className="mt-1 h-5 w-5 rounded border-[#c89c6b] text-[#c89c6b] focus:ring-[#c89c6b]"
+                                />
+                                <label htmlFor="aceptacion_terminos" className="ml-3 block text-sm font-medium text-[#3b3535]">
+                                    He leído y acepto los <button type="button" onClick={() => setIsTermsModalOpen(true)} className="text-[#c1835a] hover:underline font-semibold focus:outline-none">Términos y Condiciones</button> de la plataforma, incluyendo la exención de responsabilidad por riesgos de carpintería.
+                                </label>
+                            </div>
+                        </div>
+
                         {submitError && (
                             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                                 {submitError}
                             </div>
                         )}
 
-                        <div className="flex flex-col space-y-4 pt-6 border-t border-[#c89c6b]/30">
-                            <Button 
-                                onClick={handleSubmit} 
+                        <div className="flex flex-col space-y-4 pt-6">
+                            <Button
+                                onClick={handleSubmit}
                                 disabled={isSubmitting || uploading || isDeleting}
                                 className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-4 text-lg font-semibold flex items-center justify-center space-x-2 disabled:opacity-50"
                             >
@@ -763,11 +805,11 @@ function CreateProjectContent() {
                                     </>
                                 )}
                             </Button>
-                            
+
                             {isEditMode && (
-                                <Button 
+                                <Button
                                     variant="destructive"
-                                    onClick={handleDelete} 
+                                    onClick={handleDelete}
                                     disabled={isSubmitting || uploading || isDeleting}
                                     className="w-full"
                                 >
@@ -782,6 +824,10 @@ function CreateProjectContent() {
                         </div>
                     </div>
                 </div>
+                <TermsModal
+                    isOpen={isTermsModalOpen}
+                    onClose={() => setIsTermsModalOpen(false)}
+                />
             </div>
         </div>
     );
