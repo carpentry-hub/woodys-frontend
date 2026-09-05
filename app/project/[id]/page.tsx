@@ -168,6 +168,32 @@ export default function ProjectPage() {
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
+    const handleTutorialDownload = async () => {
+        if (!project?.tutorial) {
+            return;
+        }
+
+        try {
+            const response = await fetch(project.tutorial);
+            if (!response.ok) {
+                throw new Error(`No se pudo descargar el tutorial (${response.status})`);
+            }
+
+            const blob = await response.blob();
+            const downloadUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.download = `${project.title || 'tutorial'}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(downloadUrl);
+        } catch (error) {
+            console.error('Error al descargar el tutorial:', error);
+            window.open(project.tutorial, '_blank', 'noopener,noreferrer');
+        }
+    };
+
     useEffect(() => {
         if (user) {
             getUserByFirebaseUid(user.uid).then(setAppUser);
@@ -512,7 +538,7 @@ export default function ProjectPage() {
                                     <Button className="w-full bg-white/80 hover:bg-white text-[#c1835a] border-2 border-[#c1835a] py-6 text-md font-semibold rounded-xl" onClick={() => appUser ? setIsSaveModalOpen(true) : alert('Inicia sesión para guardar.')}>
                                         <Heart className="w-5 h-5 mr-2" /> Guardar
                                     </Button>
-                                    <Button className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-6 text-md font-semibold rounded-xl" onClick={() => window.open(project.tutorial, '_blank')} disabled={!project.tutorial}>
+                                    <Button type="button" className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-6 text-md font-semibold rounded-xl" onClick={handleTutorialDownload} disabled={!project.tutorial}>
                                         <Download className="w-5 h-5 mr-2" /> Descargar
                                     </Button>
                                 </div>
