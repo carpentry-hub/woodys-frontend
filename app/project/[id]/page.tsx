@@ -168,34 +168,14 @@ export default function ProjectPage() {
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
-    const handleTutorialDownload = async () => {
+    const handleTutorialDownload = () => {
         if (!project?.tutorial) {
             return;
         }
 
-        try {
-            const response = await fetch(project.tutorial);
-            if (!response.ok) {
-                throw new Error(`No se pudo descargar el tutorial (${response.status})`);
-            }
-
-            const blob = await response.blob();
-            const downloadUrl = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = downloadUrl;
-            const fileName = `${(project.title || 'tutorial')
-                .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
-                .trim() || 'tutorial'}.pdf`;
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            link.remove();
-            // Firefox can start the download asynchronously after click().
-            window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 60_000);
-        } catch (error) {
-            console.error('Error al descargar el tutorial:', error);
-            window.open(project.tutorial, '_blank', 'noopener,noreferrer');
-        }
+        // Firebase Storage does not expose CORS headers for this signed URL.
+        // Navigating directly lets the browser handle the PDF without fetch().
+        window.open(project.tutorial, '_blank', 'noopener,noreferrer');
     };
 
     useEffect(() => {
