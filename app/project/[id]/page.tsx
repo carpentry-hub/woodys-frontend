@@ -168,16 +168,6 @@ export default function ProjectPage() {
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
-    const handleTutorialDownload = () => {
-        if (!project?.tutorial) {
-            return;
-        }
-
-        // Firebase Storage does not expose CORS headers for this signed URL.
-        // Navigating directly lets the browser handle the PDF without fetch().
-        window.open(project.tutorial, '_blank', 'noopener,noreferrer');
-    };
-
     useEffect(() => {
         if (user) {
             getUserByFirebaseUid(user.uid).then(setAppUser);
@@ -533,8 +523,21 @@ export default function ProjectPage() {
                                     <Button className="w-full bg-white/80 hover:bg-white text-[#c1835a] border-2 border-[#c1835a] py-6 text-md font-semibold rounded-xl" onClick={() => appUser ? setIsSaveModalOpen(true) : alert('Inicia sesión para guardar.')}>
                                         <Heart className="w-5 h-5 mr-2" /> Guardar
                                     </Button>
-                                    <Button type="button" className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-6 text-md font-semibold rounded-xl" onClick={handleTutorialDownload} disabled={!project.tutorial}>
-                                        <Download className="w-5 h-5 mr-2" /> Descargar
+                                    <Button
+                                        asChild
+                                        className="w-full bg-[#656b48] hover:bg-[#3b3535] text-white py-6 text-md font-semibold rounded-xl"
+                                    >
+                                        <a
+                                            href={project.tutorial || '#'}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-disabled={!project.tutorial}
+                                            onClick={(event) => {
+                                                if (!project.tutorial) event.preventDefault();
+                                            }}
+                                        >
+                                            <Download className="w-5 h-5 mr-2" /> Descargar
+                                        </a>
                                     </Button>
                                 </div>
                             </div>
