@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword } from 'firebase/auth';
+import { User as FirebaseUser, onAuthStateChanged, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, createUserWithEmailAndPassword, sendPasswordResetEmail, deleteUser, reauthenticateWithCredential, reauthenticateWithPopup, EmailAuthProvider } from 'firebase/auth';
 import { auth } from '../lib/firebase';
-import { createUserInDB, getUserByFirebaseUid, getUserProfilePictureUrl } from '../app/services/users';
+import { createUserInDB, deleteUserInDB, getUserByFirebaseUid, getUserProfilePictureUrl } from '../app/services/users';
 import type { User as AppUser } from '../models/user';
 
 const APP_USER_KEY = 'appUser';
@@ -98,7 +98,9 @@ export function useAuth() {
         try {
             return await fetchAppUserData(firebaseUser);
         } catch (err) {
-            console.log(err,'Usuario no encontrado en DB, creando...');
+            if (!(err instanceof Error && (err as Error & { status?: number }).status === 404)) {
+                throw err;
+            }
             const userData: Partial<AppUser> = {
                 username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Nuevo Usuario',
                 email: firebaseUser.email || '',
@@ -162,9 +164,33 @@ export function useAuth() {
                 setError(err.message);
             }
             setLoading(false);
-            throw new Error('An unknown error occurred during Google login.');
+            throw err instanceof Error ? err : new Error('No se pudo iniciar sesión con Google.');
         }
     }, [ensureUserInDB]);
+
+    const sendPasswordReset = useCallback(async (email: string) => {
+        await sendPasswordResetEmail(auth, email.trim());
+    }, []);
+
+    const deleteAccount = useCallback(async (password?: string) => {
+        const firebaseUser = auth.currentUser;
+        if (!firebaseUser || !appUser) throw new Error('Usuario no autenticado');
+        setLoading(true);
+        try {
+            if (firebaseUser.providerData.some(provider => provider.providerId === 'password')) {
+                if (!password) throw new Error('Introduce tu contraseña para eliminar la cuenta.');
+                const credential = EmailAuthProvider.credential(firebaseUser.email || '', password);
+                await reauthenticateWithCredential(firebaseUser, credential);
+            } else {
+                await reauthenticateWithPopup(firebaseUser, new GoogleAuthProvider());
+            }
+            await deleteUserInDB(appUser.id);
+            await deleteUser(firebaseUser);
+            clearUserData();
+        } finally {
+            setLoading(false);
+        }
+    }, [appUser, clearUserData]);
 
     const logout = useCallback(async () => {
         setError(null);
@@ -189,6 +215,8 @@ export function useAuth() {
         loginWithGoogle, 
         logout, 
         registerWithEmail,
-        fetchAppUserData
+        fetchAppUserData,
+        sendPasswordReset,
+        deleteAccount
     };
 }

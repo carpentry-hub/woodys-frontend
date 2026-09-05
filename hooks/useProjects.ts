@@ -95,21 +95,27 @@ export function useProjects() {
     }, []);
 
     const filteredProjects = useMemo(() => {
-        return allPublicProjects.filter(project => {
-            const searchMatch = searchTerm === '' ||
-                project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                project.description.toLowerCase().includes(searchTerm.toLowerCase());
+        return allPublicProjects
+            .filter(project => {
+                const searchMatch = searchTerm === '' ||
+                    project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    project.description.toLowerCase().includes(searchTerm.toLowerCase());
 
-            const filterMatch = Object.entries(activeFilters).every(([key, value]) => {
-                if (!value) return true;
-                // ✅ Lógica de filtro actualizada para los nuevos campos
-                if (key === 'style') return project.style?.includes(value);
-                if (key === 'material') return project.materials?.includes(value);
-                // (Se puede añadir filtro por 'time_to_build' o 'average_rating' si se desea)
-                return true;
+                const filterMatch = Object.entries(activeFilters).every(([key, value]) => {
+                    if (!value) return true;
+                    // ✅ Lógica de filtro actualizada para los nuevos campos
+                    if (key === 'style') return project.style?.includes(value);
+                    if (key === 'material') return project.materials?.includes(value);
+                    // (Se puede añadir filtro por 'time_to_build' o 'average_rating' si se desea)
+                    return true;
+                });
+                return searchMatch && filterMatch;
+            })
+            .sort((a, b) => {
+                const dateB = new Date(b.created_at).getTime();
+                const dateA = new Date(a.created_at).getTime();
+                return dateB - dateA;
             });
-            return searchMatch && filterMatch;
-        });
     }, [allPublicProjects, searchTerm, activeFilters]);
 
     const filterOptions = useMemo(() => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Star, Filter, Clock, Loader2, Bookmark } from 'lucide-react';
@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import SaveToListModal from '@/components/save-to-list-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import LoginModal from '@/components/login-modal';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const capitalize = (s: string) => {
     if (!s) return '';
@@ -139,9 +139,14 @@ export default function ExplorerPage() {
 
     const { appUser, user } = useAuth();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
     const [loginModalOpen, setLoginModalOpen] = useState(false);
+
+    useEffect(() => {
+        setSearchTerm(searchParams.get('q') || '');
+    }, [searchParams, setSearchTerm]);
 
     const handleSaveClick = (projectId: number) => {
         if (!appUser) {

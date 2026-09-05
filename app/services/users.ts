@@ -1,6 +1,5 @@
 import { API_BASE_URL } from './api-routes';
 import { User } from '@/models/user';
-import { auth } from '@/lib/firebase';
 import { getIdTokenHeader } from '../../lib/auth-headers';
 import { ProfilePicture } from '@/models/profile-picture';
 
@@ -41,7 +40,9 @@ export async function getUserByFirebaseUid(uid: string): Promise<User> {
     const resId = await fetch(`${API_BASE_URL}/users/uid/${uid}`, { headers });
     if (!resId.ok) {
         if (resId.status === 404) {
-            throw new Error('Usuario no encontrado');
+            const error = new Error('Usuario no encontrado');
+            (error as Error & { status?: number }).status = 404;
+            throw error;
         }
         throw new Error('Error obteniendo ID de usuario desde UID');
     }
@@ -75,6 +76,14 @@ export async function updateUser(id: number, data: Partial<User>): Promise<User>
     });
     if (!res.ok) throw new Error('Error actualizando usuario');
     return res.json();
+}
+
+export async function deleteUserInDB(id: number): Promise<void> {
+    const res = await fetch(`${API_BASE_URL}/users/${id}`, {
+        method: 'DELETE',
+        headers: await getIdTokenHeader(),
+    });
+    if (!res.ok) throw new Error('No se pudo eliminar la cuenta del servidor');
 }
 
 export async function getProfilePictures(): Promise<ProfilePicture[]> {

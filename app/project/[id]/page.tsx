@@ -526,13 +526,17 @@ export default function ProjectPage() {
 
                             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                                 <div className="flex items-center p-4 border border-gray-200 rounded-xl bg-white/50 min-h-[72px]">
-                                    <span className="text-xl font-bold text-[#3b3535]">{project.average_rating?.toFixed(1)}</span>
+                                    {project.rating_count > 0 ? (
+                                        <span className="text-xl font-bold text-[#3b3535]">{project.average_rating?.toFixed(1)}</span>
+                                    ) : (
+                                        <span className="text-sm font-semibold text-gray-400">Sé el primero en puntuar</span>
+                                    )}
                                     <div className="flex gap-1 ml-2 mr-2">
                                         {[1, 2, 3, 4, 5].map((i) => (
                                             <Star key={i} className={`w-5 h-5 cursor-pointer transition-colors ${(hoverRating || rating || Math.round(project.average_rating ?? 0)) >= i ? 'fill-[#c1835a] text-[#c1835a]' : 'text-gray-300'}`} onClick={() => handleRateProject(i)} onMouseEnter={() => setHoverRating(i)} onMouseLeave={() => setHoverRating(0)} />
                                         ))}
                                     </div>
-                                    <span className="text-gray-500 text-sm">({project.rating_count})</span>
+                                    {project.rating_count > 0 && <span className="text-gray-500 text-sm">({project.rating_count})</span>}
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     <Button className="w-full bg-white/80 hover:bg-white text-[#c1835a] border-2 border-[#c1835a] py-6 text-md font-semibold rounded-xl" onClick={() => appUser ? setIsSaveModalOpen(true) : alert('Inicia sesión para guardar.')}>

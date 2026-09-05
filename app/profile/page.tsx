@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Edit, Calendar, Loader2, X } from 'lucide-react';
+import { Edit, Calendar, Loader2, X, AlertTriangle } from 'lucide-react';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserProjects, updateUser } from '../services/users';
@@ -22,7 +22,8 @@ export default function ProfilePage() {
         appUser, 
         profilePictureUrl, 
         loading: authLoading,
-        fetchAppUserData 
+        fetchAppUserData,
+        deleteAccount
     } = useAuth();
     
     const [showSelector, setShowSelector] = useState(false);
@@ -36,6 +37,10 @@ export default function ProfilePage() {
 
     const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+    const [deletePassword, setDeletePassword] = useState('');
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     useEffect(() => {
         if (appUser?.username) {
@@ -146,6 +151,19 @@ export default function ProfilePage() {
     const handleSaveClick = (projectId: number) => {
         setSelectedProjectId(projectId);
         setIsSaveModalOpen(true);
+    };
+
+    const handleDeleteAccount = async () => {
+        setDeleteError(null);
+        setIsDeleting(true);
+        try {
+            await deleteAccount(deletePassword || undefined);
+            window.location.href = '/';
+        } catch (error) {
+            setDeleteError(error instanceof Error ? error.message : 'No se pudo eliminar la cuenta.');
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     return (
@@ -309,6 +327,20 @@ export default function ProfilePage() {
                                 </Link>
                             </div>
                         </div>
+                        <div className="mt-24 pb-20 flex justify-center">
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={() => {
+                                    setDeleteError(null);
+                                    setDeletePassword('');
+                                    setIsDeleteModalOpen(true);
+                                }}
+                                disabled={isDeleting}
+                            >
+                                Eliminar cuenta
+                            </Button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -318,6 +350,58 @@ export default function ProfilePage() {
                     projectId={selectedProjectId}
                     onClose={() => setIsSaveModalOpen(false)}
                 />
+            )}
+
+            {isDeleteModalOpen && (
+                <div
+                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-4 backdrop-blur-sm"
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="delete-account-title"
+                >
+                    <div className="w-full max-w-md rounded-2xl bg-white p-6 text-center shadow-2xl sm:p-8">
+                        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+                            <AlertTriangle className="h-6 w-6" />
+                        </div>
+                        <h2 id="delete-account-title" className="mt-4 text-xl font-bold text-[#3b3535]">
+                            Antes de despedirnos
+                        </h2>
+                        <p className="mt-3 text-sm leading-relaxed text-[#676765]">
+                            Al eliminar tu cuenta se borrarán permanentemente tu perfil y todos los proyectos que hayas publicado.
+                            No podrás recuperar esta información. Lamentaremos mucho verte partir, pero estaremos encantados de
+                            recibirte nuevamente cuando quieras volver.
+                        </p>
+                        {firebaseUser?.providerData.some(provider => provider.providerId === 'password') && (
+                            <Input
+                                type="password"
+                                value={deletePassword}
+                                onChange={(event) => setDeletePassword(event.target.value)}
+                                placeholder="Confirma tu contraseña"
+                                className="mt-5"
+                                disabled={isDeleting}
+                            />
+                        )}
+                        {deleteError && <p className="mt-3 text-sm text-red-600">{deleteError}</p>}
+                        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-center">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                onClick={() => setIsDeleteModalOpen(false)}
+                                disabled={isDeleting}
+                            >
+                                No, conservar mi cuenta
+                            </Button>
+                            <Button
+                                type="button"
+                                variant="destructive"
+                                onClick={handleDeleteAccount}
+                                disabled={isDeleting}
+                            >
+                                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Quiero eliminar mi cuenta'}
+                            </Button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

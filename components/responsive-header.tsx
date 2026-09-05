@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Search, Menu, X, Home, FolderOpen, Heart, User, ChevronDown, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 interface ResponsiveHeaderProps {
     onCreateProject?: () => void
@@ -18,7 +18,9 @@ interface ResponsiveHeaderProps {
 export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
     const pathname = usePathname();
+    const router = useRouter();
 
     const navigationItems = [
         { name: 'Explorar proyectos', href: '/explorer', icon: Home, active: pathname === '/explorer', always: true, },
@@ -29,6 +31,13 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
     const closeMenu = () => setIsMenuOpen(false);
+
+    const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        const query = searchTerm.trim();
+        router.push(query ? `/explorer?q=${encodeURIComponent(query)}` : '/explorer');
+        setIsSearchOpen(false);
+    };
 
     const { user, appUser, profilePictureUrl, loading, logout } = useAuthContext();
     const [loginModalOpen, setLoginModalOpen] = useState(false);
@@ -122,14 +131,16 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                         </div>
 
                         <div className="flex items-center space-x-2 sm:space-x-4 min-w-0">
-                            <div className="hidden md:block relative">
+                            <form onSubmit={handleSearch} className="hidden md:block relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#adadad] w-4 h-4" />
                                 <input
                                     type="text"
                                     placeholder="Buscar proyectos..."
+                                    value={searchTerm}
+                                    onChange={(event) => setSearchTerm(event.target.value)}
                                     className="pl-10 pr-4 py-2 bg-[#f6f6f6] rounded-full text-sm w-48 lg:w-64 focus:outline-none focus:ring-2 focus:ring-[#c1835a]"
                                 />
-                            </div>
+                            </form>
 
                             <button
                                 onClick={() => setIsSearchOpen(!isSearchOpen)}
@@ -195,15 +206,17 @@ export function ResponsiveHeader({ onCreateProject }: ResponsiveHeaderProps) {
                     </div>
 
                     {isSearchOpen && (
-                        <div className="md:hidden mt-4 relative">
+                        <form onSubmit={handleSearch} className="md:hidden mt-4 relative">
                             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#adadad] w-4 h-4" />
                             <input
                                 type="text"
                                 placeholder="Buscar tu proyecto de carpintería perfecto..."
+                                value={searchTerm}
+                                onChange={(event) => setSearchTerm(event.target.value)}
                                 className="w-full pl-10 pr-4 py-3 bg-[#f6f6f6] rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#c1835a]"
                                 autoFocus
                             />
-                        </div>
+                        </form>
                     )}
                 </div>
             </header>

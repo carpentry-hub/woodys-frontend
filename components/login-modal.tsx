@@ -12,16 +12,18 @@ interface LoginModalProps {
 }
 
 export default function LoginModal({ open, onClose }: LoginModalProps) {
-    const { loginWithGoogle, login, registerWithEmail } = useAuth();
+    const { loginWithGoogle, login, registerWithEmail, sendPasswordReset } = useAuth();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isRegister, setIsRegister] = useState(false);
     const [loading, setLoading] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [resetMessage, setResetMessage] = useState<string | null>(null);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setSubmitError(null);
+        setResetMessage(null);
         setLoading(true);
         try {
             if (isRegister) {
@@ -41,6 +43,23 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
                 }
                 console.error(error.message);
             }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePasswordReset = async () => {
+        if (!email.trim()) {
+            setSubmitError('Escribe tu correo electrónico para recuperar la contraseña.');
+            return;
+        }
+        setLoading(true);
+        setSubmitError(null);
+        try {
+            await sendPasswordReset(email);
+            setResetMessage('Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.');
+        } catch {
+            setResetMessage('Si el correo está registrado, recibirás instrucciones para restablecer tu contraseña.');
         } finally {
             setLoading(false);
         }
@@ -89,6 +108,11 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
                         onChange={e => setPassword(e.target.value)}
                         required
                     />
+                    {!isRegister && (
+                        <button type="button" onClick={handlePasswordReset} className="self-end text-xs text-[#c1835a] hover:underline">
+                            ¿Olvidaste tu contraseña?
+                        </button>
+                    )}
                     <Button type="submit" className="bg-[#c1835a] text-white rounded-full mt-2" disabled={loading}>
                         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (isRegister ? 'Registrarme' : 'Ingresar')}
                     </Button>
@@ -108,6 +132,7 @@ export default function LoginModal({ open, onClose }: LoginModalProps) {
                     {isRegister ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate'}
                 </button>
                 {submitError && <div className="text-red-500 text-xs text-center mt-2">{submitError}</div>}
+                {resetMessage && <div className="text-green-700 text-xs text-center mt-2">{resetMessage}</div>}
             </div>
         </div>,
         typeof window !== 'undefined' ? document.body : document.createElement('div')
