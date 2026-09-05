@@ -183,11 +183,15 @@ export default function ProjectPage() {
             const downloadUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = downloadUrl;
-            link.download = `${project.title || 'tutorial'}.pdf`;
+            const fileName = `${(project.title || 'tutorial')
+                .replace(/[<>:"/\\|?*\u0000-\u001F]/g, '')
+                .trim() || 'tutorial'}.pdf`;
+            link.download = fileName;
             document.body.appendChild(link);
             link.click();
             link.remove();
-            URL.revokeObjectURL(downloadUrl);
+            // Firefox can start the download asynchronously after click().
+            window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 60_000);
         } catch (error) {
             console.error('Error al descargar el tutorial:', error);
             window.open(project.tutorial, '_blank', 'noopener,noreferrer');
@@ -396,49 +400,56 @@ export default function ProjectPage() {
                 };
                 
                 const allImages = [processedProject.portrait, ...processedProject.images].filter(Boolean);
+                setProject({
+                    ...processedProject,
+                    images: allImages,
+                    average_rating: processedProject.average_rating ?? 0,
+                    rating_count: processedProject.rating_count ?? 0
+                });
+                setLoading(false);
 
-                const ratings = await getProjectRatings(projectId);
-                const averageRating = ratings.length > 0 ? ratings.reduce((acc: number, rating: Rating) => acc + rating.value, 0) / ratings.length : 0;
-                const ratingCount = ratings.length;
+                const ratingsPromise = getProjectRatings(projectId);
+                const commentsPromise = listProjectComments(projectId);
+                const authorPromise = processedProject.owner
+                    ? getUser(processedProject.owner)
+                    : Promise.resolve(null);
 
-                setProject({ ...processedProject, images: allImages, average_rating: averageRating, rating_count: ratingCount });
+                const [ratingsResult, projectComments, user] = await Promise.all([
+                    ratingsPromise,
+                    commentsPromise,
+                    authorPromise
+                ]);
 
-                if (processedProject.owner) {
-                    const user = await getUser(processedProject.owner);
-                    
-                    let authorPicUrl = null;
-                    if (user.profile_picture && user.profile_picture > 1) {
-                        authorPicUrl = await getUserProfilePictureUrl(user.profile_picture);
-                    }
+                const averageRating = ratingsResult.length > 0
+                    ? ratingsResult.reduce((acc: number, rating: Rating) => acc + rating.value, 0) / ratingsResult.length
+                    : 0;
+                setProject(currentProject => currentProject
+                    ? { ...currentProject, average_rating: averageRating, rating_count: ratingsResult.length }
+                    : currentProject);
+
+                if (user) {
+                    const authorPicUrl = user.profile_picture && user.profile_picture > 1
+                        ? await getUserProfilePictureUrl(user.profile_picture)
+                        : null;
                     setAuthor({ ...user, profile_picture_url: authorPicUrl });
 
-                    try {
-                        const userProjects = await getUserProjects(user.id);
-                        if (userProjects.length > 0) {
-                            const allRatings: Rating[] = [];
-                            for (const userProject of userProjects) {
-                                try {
-                                    const projectRatings = await getProjectRatings(userProject.id);
-                                    allRatings.push(...projectRatings);
-                                } catch (error) {
-                                    console.error('Error fetching ratings:', error);
-                                }
-                            }
-                            if (allRatings.length > 0) {
-                                const totalRating = allRatings.reduce((acc, rating) => acc + rating.value, 0);
-                                setCalculatedReputation(totalRating / allRatings.length);
-                            } else {
-                                setCalculatedReputation(0);
-                            }
-                        } else {
-                            setCalculatedReputation(0);
-                        }
-                    } catch (error) {
-                        setCalculatedReputation(null);
-                    }
+                    getUserProjects(user.id)
+                        .then(async userProjects => {
+                            const projectRatings = await Promise.all(
+                                userProjects.map(userProject =>
+                                    getProjectRatings(userProject.id).catch(error => {
+                                        console.error('Error fetching ratings:', error);
+                                        return [];
+                                    })
+                                )
+                            );
+                            const allRatings = projectRatings.flat();
+                            const totalRating = allRatings.reduce((acc, rating) => acc + rating.value, 0);
+                            setCalculatedReputation(allRatings.length > 0 ? totalRating / allRatings.length : 0);
+                        })
+                        .catch(() => setCalculatedReputation(null));
                 }
 
-                const projectComments = await listProjectComments(projectId);
                 const commentsWithUsers = await buildCommentTree(projectComments);
                 setComments(commentsWithUsers);
             } catch (error) {

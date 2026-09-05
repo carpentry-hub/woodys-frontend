@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Star, Filter, Clock, Loader2, Bookmark } from 'lucide-react';
+import { Search, Star, Filter, Clock, Loader2, Bookmark, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ResponsiveHeader } from '@/components/responsive-header';
@@ -135,6 +135,8 @@ export default function ExplorerPage() {
         activeFilters,
         handleFilterChange,
         filterOptions,
+        sortBy,
+        setSortBy,
     } = useProjects();
 
     const { appUser, user } = useAuth();
@@ -192,24 +194,85 @@ export default function ExplorerPage() {
 
                     <div className="mb-10 p-4 bg-white/50 rounded-lg">
                         <h2 className="text-lg font-semibold text-[#3b3535] mb-4 flex items-center"><Filter className="w-5 h-5 mr-2 text-[#c1835a]"/>Filtra tu búsqueda</h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Estilo</label>
-                                <select onChange={(e) => handleFilterChange('style', e.target.value)} value={activeFilters.style || ''} className="w-full bg-white border border-gray-300 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c1835a]">
-                                    <option value="">Todos</option>
-                                    {filterOptions.styles.map(style => (
-                                        <option key={style} value={style}>{capitalize(style)}</option>
-                                    ))}
-                                </select>
+                                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#676765]">Estilo</label>
+                                <div className="relative">
+                                    <select
+                                        onChange={(e) => handleFilterChange('style', e.target.value)}
+                                        value={activeFilters.style || ''}
+                                        className="h-11 w-full appearance-none rounded-xl border border-[#dedbd3] bg-white/90 px-4 pr-10 text-sm text-[#3b3535] shadow-sm transition hover:border-[#c89c6b] focus:border-[#c1835a] focus:outline-none focus:ring-2 focus:ring-[#c1835a]/20"
+                                    >
+                                        <option value="">Todos los estilos</option>
+                                        {filterOptions.styles.map(style => (
+                                            <option key={style} value={style}>{capitalize(style)}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c1835a]" />
+                                </div>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Material</label>
-                                <select onChange={(e) => handleFilterChange('material', e.target.value)} value={activeFilters.material || ''} className="w-full bg-white border border-gray-300 rounded-md px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#c1835a]">
-                                    <option value="">Todos</option>
-                                    {filterOptions.materials.map(mat => (
-                                        <option key={mat} value={mat}>{capitalize(mat)}</option>
-                                    ))}
-                                </select>
+                                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#676765]">Material</label>
+                                <div className="relative">
+                                    <select
+                                        onChange={(e) => handleFilterChange('material', e.target.value)}
+                                        value={activeFilters.material || ''}
+                                        className="h-11 w-full appearance-none rounded-xl border border-[#dedbd3] bg-white/90 px-4 pr-10 text-sm text-[#3b3535] shadow-sm transition hover:border-[#c89c6b] focus:border-[#c1835a] focus:outline-none focus:ring-2 focus:ring-[#c1835a]/20"
+                                    >
+                                        <option value="">Todos los materiales</option>
+                                        {filterOptions.materials.map(mat => (
+                                            <option key={mat} value={mat}>{capitalize(mat)}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c1835a]" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#676765]">Tiempo de armado</label>
+                                <div className="relative">
+                                    <select
+                                        onChange={(event) => handleFilterChange('time', event.target.value)}
+                                        value={activeFilters.time || ''}
+                                        className="h-11 w-full appearance-none rounded-xl border border-[#dedbd3] bg-white/90 px-4 pr-10 text-sm text-[#3b3535] shadow-sm transition hover:border-[#c89c6b] focus:border-[#c1835a] focus:outline-none focus:ring-2 focus:ring-[#c1835a]/20"
+                                    >
+                                        <option value="">Cualquier duración</option>
+                                        {filterOptions.timeRanges.map(range => (
+                                            <option key={range.value} value={range.value}>{range.label}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c1835a]" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#676765]">Ambiente</label>
+                                <div className="relative">
+                                    <select
+                                        onChange={(event) => handleFilterChange('environment', event.target.value)}
+                                        value={activeFilters.environment || ''}
+                                        className="h-11 w-full appearance-none rounded-xl border border-[#dedbd3] bg-white/90 px-4 pr-10 text-sm text-[#3b3535] shadow-sm transition hover:border-[#c89c6b] focus:border-[#c1835a] focus:outline-none focus:ring-2 focus:ring-[#c1835a]/20"
+                                    >
+                                        <option value="">Todos los ambientes</option>
+                                        {filterOptions.environments.map(environment => (
+                                            <option key={environment} value={environment}>{capitalize(environment)}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c1835a]" />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-[#676765]">Ordenar por</label>
+                                <div className="relative">
+                                    <select
+                                        value={sortBy}
+                                        onChange={(event) => setSortBy(event.target.value as 'recent' | 'rating' | 'comments')}
+                                        className="h-11 w-full appearance-none rounded-xl border border-[#dedbd3] bg-white/90 px-4 pr-10 text-sm font-medium text-[#3b3535] shadow-sm transition hover:border-[#c89c6b] focus:border-[#c1835a] focus:outline-none focus:ring-2 focus:ring-[#c1835a]/20"
+                                    >
+                                        <option value="recent">Más recientes</option>
+                                        <option value="rating">Mejores puntuados</option>
+                                        <option value="comments">Más comentados</option>
+                                    </select>
+                                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#c1835a]" />
+                                </div>
                             </div>
                         </div>
                     </div>

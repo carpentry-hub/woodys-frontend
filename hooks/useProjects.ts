@@ -7,7 +7,15 @@ import { ProjectWithUser } from '@/models/project-with-user';
 import { searchProjects } from '@/app/services/projects';
 import { getUser, getUserProfilePictureUrl } from '@/app/services/users';
 import { getProjectRatings } from '@/app/services/ratings';
+import { listProjectComments } from '@/app/services/comments';
 import { Rating } from '@/models/rating';
+
+const timeRanges = [
+    { value: '0-5', label: 'Hasta 5 horas', matches: (hours: number) => hours <= 5 },
+    { value: '6-10', label: 'De 6 a 10 horas', matches: (hours: number) => hours >= 6 && hours <= 10 },
+    { value: '11-20', label: 'De 11 a 20 horas', matches: (hours: number) => hours >= 11 && hours <= 20 },
+    { value: '21-plus', label: 'Más de 20 horas', matches: (hours: number) => hours > 20 },
+];
 
 export function useProjects() {
     const [allPublicProjects, setAllPublicProjects] = useState<ProjectWithUser[]>([]);
@@ -49,7 +57,8 @@ export function useProjects() {
                         ...project,
                         owner: { ...user, profile_picture_url: profilePictureUrl || undefined },
                         average_rating: project.average_rating ?? 0,
-                        rating_count: project.rating_count ?? 0
+                        rating_count: project.rating_count ?? 0,
+                        comments_count: 0
                     };
                 })
             );
@@ -84,6 +93,23 @@ export function useProjects() {
                     }
                     : project;
             }));
+
+            const commentsByProject = await Promise.all(
+                publicProjects.map(async project => {
+                    try {
+                        const comments = await listProjectComments(project.id);
+                        return { id: project.id, count: comments.length };
+                    } catch (commentsError) {
+                        console.error(`Error cargando comentarios del proyecto ${project.id}:`, commentsError);
+                        return null;
+                    }
+                })
+            );
+
+            setAllPublicProjects(currentProjects => currentProjects.map(project => {
+                const commentData = commentsByProject.find(comment => comment?.id === project.id);
+                return commentData ? { ...project, comments_count: commentData.count } : project;
+            }));
             } catch (err) {
             console.error(err);
             setError('Error cargando proyectos');
@@ -93,6 +119,8 @@ export function useProjects() {
         };
         fetchAllProjects();
     }, []);
+
+    const [sortBy, setSortBy] = useState<'recent' | 'rating' | 'comments'>('recent');
 
     const filteredProjects = useMemo(() => {
         return allPublicProjects
@@ -106,23 +134,41 @@ export function useProjects() {
                     // ✅ Lógica de filtro actualizada para los nuevos campos
                     if (key === 'style') return project.style?.includes(value);
                     if (key === 'material') return project.materials?.includes(value);
-                    // (Se puede añadir filtro por 'time_to_build' o 'average_rating' si se desea)
+                    if (key === 'environment') {
+                        const environment = Array.isArray(project.environment)
+                            ? project.environment[0]
+                            : project.environment;
+                        return environment === value;
+                    }
+                    if (key === 'time') {
+                        const timeRange = timeRanges.find(range => range.value === value);
+                        return timeRange ? timeRange.matches(project.time_to_build) : true;
+                    }
                     return true;
                 });
                 return searchMatch && filterMatch;
             })
             .sort((a, b) => {
-                const dateB = new Date(b.created_at).getTime();
-                const dateA = new Date(a.created_at).getTime();
-                return dateB - dateA;
+                if (sortBy === 'rating') {
+                    return (b.average_rating ?? 0) - (a.average_rating ?? 0);
+                }
+                if (sortBy === 'comments') {
+                    return (b.comments_count ?? 0) - (a.comments_count ?? 0);
+                }
+                return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
             });
-    }, [allPublicProjects, searchTerm, activeFilters]);
+    }, [allPublicProjects, searchTerm, activeFilters, sortBy]);
 
     const filterOptions = useMemo(() => {
         // ✅ Opciones de filtro actualizadas
         const styles = [...new Set(allPublicProjects.flatMap(p => p.style).filter(Boolean))];
         const materials = [...new Set(allPublicProjects.flatMap(p => p.materials).filter(Boolean))];
-        return { styles, materials };
+        const environments = [...new Set(
+            allPublicProjects
+                .map(project => Array.isArray(project.environment) ? project.environment[0] : project.environment)
+                .filter(Boolean)
+        )];
+        return { styles, materials, environments, timeRanges };
     }, [allPublicProjects]);
 
     const handleFilterChange = (category: string, value: string) => {
@@ -146,5 +192,7 @@ export function useProjects() {
         activeFilters,
         handleFilterChange,
         filterOptions,
+        sortBy,
+        setSortBy,
     };
 }

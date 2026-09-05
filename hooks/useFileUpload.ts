@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL, type UploadMetadata } from 'firebase/storage';
 import { storage } from '@/lib/firebase';
 
 export function useFileUpload() {
@@ -10,7 +10,16 @@ export function useFileUpload() {
         setError(null);
         try {
             const storageRef = ref(storage, path);
-            const snapshot = await uploadBytes(storageRef, file);
+        const metadata: UploadMetadata = {
+            contentType: file.type || 'application/octet-stream',
+        };
+
+        if (path.endsWith('/tutorial')) {
+            const fileName = file.name.replace(/["\\\r\n]/g, '').trim() || 'tutorial.pdf';
+            metadata.contentDisposition = `attachment; filename="${fileName}"`;
+        }
+
+        const snapshot = await uploadBytes(storageRef, file, metadata);
             const downloadURL = await getDownloadURL(snapshot.ref);
             return downloadURL;
         } catch (err: unknown) {
