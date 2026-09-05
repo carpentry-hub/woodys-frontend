@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Star, Filter, Clock, Loader2, Bookmark } from 'lucide-react';
@@ -14,10 +14,6 @@ import SaveToListModal from '@/components/save-to-list-modal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import LoginModal from '@/components/login-modal';
 import { useRouter } from 'next/navigation';
-import { getUser, getUserProfilePictureUrl } from '@/app/services/users';
-import { getProjectRatings } from '@/app/services/ratings';
-import { Rating } from '@/models/rating';
-import { Project } from '@/models/project';
 
 const capitalize = (s: string) => {
     if (!s) return '';
@@ -147,65 +143,6 @@ export default function ExplorerPage() {
     const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
     const [loginModalOpen, setLoginModalOpen] = useState(false);
 
-    const [enrichedProjects, setEnrichedProjects] = useState<ProjectWithUser[]>([]);
-    const [enriching, setEnriching] = useState(false);
-
-    useEffect(() => {
-        const enrichData = async () => {
-            if (projects.length === 0) {
-                setEnrichedProjects([]);
-                return;
-            }
-
-            setEnriching(true);
-
-            try {
-                const projectsWithData = await Promise.all(
-                    projects.map(async (project: ProjectWithUser | Project) => {
-                        const userId = typeof project.owner === 'object' ? project.owner.id : project.owner;
-                        const userData = await getUser(userId);
-                        
-                        const ratings = await getProjectRatings(project.id);
-                        const avg = ratings.reduce((acc: number, rating: Rating) => acc + rating.value, 0);
-                        const averageRating = ratings.length > 0 ? avg / ratings.length : 0;
-                        const ratingCount = ratings.length;
-
-                        // CORRECCIÓN AQUI: Usamos undefined en lugar de null
-                        let profilePicUrl: string | undefined = undefined;
-                        
-                        if (userData.profile_picture && userData.profile_picture > 1) {
-                            // Convertimos el posible null a undefined con || undefined
-                            const url = await getUserProfilePictureUrl(userData.profile_picture);
-                            profilePicUrl = url || undefined;
-                        }
-                        
-                        const ownerWithPic = { 
-                            ...userData, 
-                            profile_picture_url: profilePicUrl 
-                        };
-
-                        return { 
-                            ...project, 
-                            owner: ownerWithPic, 
-                            average_rating: averageRating, 
-                            rating_count: ratingCount 
-                        } as ProjectWithUser;
-                    })
-                );
-                setEnrichedProjects(projectsWithData);
-            } catch (err) {
-                console.error('Error fetching additional data:', err);
-                setEnrichedProjects(projects as ProjectWithUser[]);
-            } finally {
-                setEnriching(false);
-            }
-        };
-
-        if (!loadingProjects) {
-            enrichData();
-        }
-    }, [projects, loadingProjects]);
-
     const handleSaveClick = (projectId: number) => {
         if (!appUser) {
             setLoginModalOpen(true);
@@ -223,7 +160,8 @@ export default function ExplorerPage() {
         }
     };
 
-    const isLoading = loadingProjects || enriching;
+    const isLoading = loadingProjects;
+    const enrichedProjects = projects;
 
     return (
         <div className="min-h-screen bg-[#f2f0eb]">
