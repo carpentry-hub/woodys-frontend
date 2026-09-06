@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Download, Star, Clock, Wrench, Loader2, Home, Palette, CheckSquare, Edit, Trash2, Heart } from 'lucide-react';
+import { Download, Star, Clock, Wrench, Loader2, Home, Palette, CheckSquare, Edit, Trash2, Heart, MoreVertical } from 'lucide-react';
 import { ProductGallery } from '@/components/product-gallery';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { Project } from '@/models/project';
@@ -13,7 +13,7 @@ import { User } from '@/models/user';
 import { deleteProject, getProject } from '../../services/projects';
 import { getUser, getUserByFirebaseUid, getUserProjects, getUserProfilePictureUrl } from '../../services/users';
 import { rateProject, getProjectRatings, updateRating } from '../../services/ratings';
-import { listProjectComments, commentProject, replyToComment } from '../../services/comments';
+import { listProjectComments, commentProject, replyToComment, deleteComment } from '../../services/comments';
 import { useAuthContext } from '@/contexts/AuthContext';
 import DOMPurify from 'dompurify';
 import { Comment, CommentWithUser } from '@/models/comment';
@@ -29,6 +29,8 @@ function CommentItem({
     replyContent, 
     setReplyContent, 
     handleReplySubmit,
+    handleDeleteComment,
+    currentUserId,
     depth,
     projectOwnerId
 }: { 
@@ -38,6 +40,8 @@ function CommentItem({
     replyContent: string; 
     setReplyContent: (content: string) => void; 
     handleReplySubmit: (id: number) => void;
+    handleDeleteComment: (id: number) => Promise<void>;
+    currentUserId: number | null;
     depth: number;
     projectOwnerId: number;
 }) {
@@ -46,6 +50,10 @@ function CommentItem({
     const borderClass = depth > 0 ? 'border-l-2 border-gray-200 pl-4' : '';
     
     const isAuthor = comment.user_id === projectOwnerId;
+    const isCommentOwner = currentUserId !== null && comment.user_id === currentUserId;
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const isDeleted = comment.content === 'Comentario Eliminado';
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleString('es-ES', {
@@ -72,7 +80,7 @@ function CommentItem({
                 </Link>
 
                 <div className="flex-1">
-                    <div className={`p-4 rounded-2xl rounded-tl-none border shadow-sm ${isAuthor ? 'bg-[#c1835a]/5 border-[#c1835a]/20' : 'bg-white/60 border-gray-100'}`}>
+                    <div className={`p-4 rounded-2xl rounded-tl-none border shadow-sm ${isDeleted ? 'bg-gray-100 border-gray-200' : isAuthor ? 'bg-[#c1835a]/5 border-[#c1835a]/20' : 'bg-white/60 border-gray-100'}`}>
                         <div className="flex justify-between items-center mb-2">
                             <div className="flex items-center gap-2">
                                 {/* --- ENLACE AL PERFIL EN EL NOMBRE DEL COMENTARIO --- */}
@@ -86,11 +94,43 @@ function CommentItem({
                                     </Badge>
                                 )}
                             </div>
-                            <span className="text-xs text-gray-400">
-                                {formatDate(comment.created_at)}
-                            </span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-400">{formatDate(comment.created_at)}</span>
+                                {isCommentOwner && !isDeleted && (
+                                    <div className="relative">
+                                        <button
+                                            type="button"
+                                            className="rounded-full p-1 text-gray-400 transition hover:bg-gray-200 hover:text-[#3b3535]"
+                                            onClick={() => setIsMenuOpen(open => !open)}
+                                            aria-label="Opciones del comentario"
+                                        >
+                                            <MoreVertical className="h-4 w-4" />
+                                        </button>
+                                        {isMenuOpen && (
+                                            <div className="absolute right-0 top-8 z-20 min-w-36 rounded-lg border border-gray-200 bg-white p-1 shadow-lg">
+                                                <button
+                                                    type="button"
+                                                    className="w-full rounded-md px-3 py-2 text-left text-xs text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                                                    disabled={isDeleting}
+                                                    onClick={async () => {
+                                                        setIsDeleting(true);
+                                                        try {
+                                                            await handleDeleteComment(comment.id);
+                                                            setIsMenuOpen(false);
+                                                        } finally {
+                                                            setIsDeleting(false);
+                                                        }
+                                                    }}
+                                                >
+                                                    {isDeleting ? 'Eliminando...' : 'Eliminar comentario'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                        <p className="text-gray-700 text-sm whitespace-pre-wrap leading-relaxed">{comment.content}</p>
+                        <p className={`text-sm whitespace-pre-wrap leading-relaxed ${isDeleted ? 'italic text-gray-500' : 'text-gray-700'}`}>{comment.content}</p>
                     </div>
 
                     <div className="flex items-center gap-4 mt-2 pl-2">
@@ -137,6 +177,8 @@ function CommentItem({
                             replyContent={replyContent}
                             setReplyContent={setReplyContent}
                             handleReplySubmit={handleReplySubmit}
+                            handleDeleteComment={handleDeleteComment}
+                            currentUserId={currentUserId}
                             depth={depth + 1}
                             projectOwnerId={projectOwnerId}
                         />
@@ -160,6 +202,7 @@ export default function ProjectPage() {
     const [appUser, setAppUser] = useState<User | null>(null);
     const [userRating, setUserRating] = useState<Rating | null>(null);
     const [comments, setComments] = useState<CommentWithUser[]>([]);
+    const [commentsLoading, setCommentsLoading] = useState(true);
     const [newComment, setNewComment] = useState('');
     const [replyingTo, setReplyingTo] = useState<number | null>(null);
     const [replyContent, setReplyContent] = useState('');
@@ -239,12 +282,33 @@ export default function ProjectPage() {
             
             setNewComment('');
             
+            setCommentsLoading(true);
             const projectComments = await listProjectComments(project.id);
             const commentsWithUsers = await buildCommentTree(projectComments);
             setComments(commentsWithUsers);
+            setCommentsLoading(false);
         } catch (error) {
             console.error('Error al enviar el comentario:', error);
+            setCommentsLoading(false);
             alert('Hubo un error al enviar tu comentario.');
+        }
+    };
+
+    const handleDeleteComment = async (commentId: number) => {
+        if (!project) return;
+
+        try {
+            await deleteComment(commentId);
+            setCommentsLoading(true);
+            const projectComments = await listProjectComments(project.id);
+            const commentsWithUsers = await buildCommentTree(projectComments);
+            setComments(commentsWithUsers);
+            setCommentsLoading(false);
+        } catch (error) {
+            console.error('Error al eliminar el comentario:', error);
+            setCommentsLoading(false);
+            alert('No se pudo eliminar el comentario. Inténtalo nuevamente.');
+            throw error;
         }
     };
 
@@ -259,11 +323,14 @@ export default function ProjectPage() {
             await replyToComment(commentId, { content: replyContent, user_id: appUser.id, project_id: project.id, parent_comment_id: commentId });
             setReplyingTo(null);
             setReplyContent('');
+            setCommentsLoading(true);
             const projectComments = await listProjectComments(project.id);
             const commentsWithUsers = await buildCommentTree(projectComments);
             setComments(commentsWithUsers);
+            setCommentsLoading(false);
         } catch (error) {
             console.error('Error al enviar la respuesta:', error);
+            setCommentsLoading(false);
             alert('Hubo un error al enviar tu respuesta.');
         }
     };
@@ -422,8 +489,10 @@ export default function ProjectPage() {
 
                 const commentsWithUsers = await buildCommentTree(projectComments);
                 setComments(commentsWithUsers);
+                setCommentsLoading(false);
             } catch (error) {
                 console.error('Error cargando datos:', error);
+                setCommentsLoading(false);
             } finally {
                 setLoading(false);
             }
@@ -622,7 +691,12 @@ export default function ProjectPage() {
                         )}
 
                         <div className="space-y-6">
-                            {comments.length > 0 ? (
+                            {commentsLoading ? (
+                                <div className="flex items-center justify-center gap-2 py-8 text-sm text-gray-500">
+                                    <Loader2 className="h-4 w-4 animate-spin text-[#c1835a]" />
+                                    Cargando comentarios...
+                                </div>
+                            ) : comments.length > 0 ? (
                                 comments.map((comment) => (
                                     <CommentItem
                                         key={comment.id}
@@ -632,6 +706,8 @@ export default function ProjectPage() {
                                         replyContent={replyContent}
                                         setReplyContent={setReplyContent}
                                         handleReplySubmit={handleReplySubmit}
+                                        handleDeleteComment={handleDeleteComment}
+                                        currentUserId={appUser?.id ?? null}
                                         depth={0}
                                         projectOwnerId={project.owner}
                                     />
