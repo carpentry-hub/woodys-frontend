@@ -2,6 +2,7 @@ import { API_BASE_URL } from './api-routes';
 import { User } from '@/models/user';
 import { getIdTokenHeader } from '../../lib/auth-headers';
 import { ProfilePicture } from '@/models/profile-picture';
+import { auth } from '@/lib/firebase';
 
 export async function getUser(id: number): Promise<User> {
     console.log(`[getUser] Buscando usuario con ID: ${id}`);
