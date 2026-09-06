@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Download, Star, Clock, Wrench, Loader2, Home, Palette, CheckSquare, Edit, Trash2, Heart, MoreVertical } from 'lucide-react';
+import { Download, Star, Clock, Wrench, Loader2, Home, Palette, CheckSquare, Edit, Trash2, Heart, MoreVertical, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { ProductGallery } from '@/components/product-gallery';
 import { ResponsiveHeader } from '@/components/responsive-header';
 import { Project } from '@/models/project';
@@ -13,10 +13,10 @@ import { User } from '@/models/user';
 import { deleteProject, getProject } from '../../services/projects';
 import { getUser, getUserByFirebaseUid, getUserProjects, getUserProfilePictureUrl } from '../../services/users';
 import { rateProject, getProjectRatings, updateRating } from '../../services/ratings';
-import { listProjectComments, commentProject, replyToComment, deleteComment } from '../../services/comments';
+import { listProjectComments, commentProject, replyToComment, deleteComment, createCommentLike, getCommentLikes, getUserCommentLike, updateCommentLike, deleteCommentLike } from '../../services/comments';
 import { useAuthContext } from '@/contexts/AuthContext';
 import DOMPurify from 'dompurify';
-import { Comment, CommentWithUser } from '@/models/comment';
+import { Comment, CommentLike, CommentLikeCounts, CommentWithUser } from '@/models/comment';
 import { Rating } from '@/models/rating';
 import SaveToListModal from '@/components/save-to-list-modal';
 import Link from 'next/link'; // <--- IMPORTANTE: Importamos Link
@@ -32,7 +32,10 @@ function CommentItem({
     handleDeleteComment,
     currentUserId,
     depth,
-    projectOwnerId
+    projectOwnerId,
+    getLikeCounts,
+    getUserLike,
+    handleCommentLike
 }: { 
     comment: CommentWithUser; 
     replyingTo: number | null; 
@@ -44,6 +47,9 @@ function CommentItem({
     currentUserId: number | null;
     depth: number;
     projectOwnerId: number;
+    getLikeCounts: (commentId: number) => CommentLikeCounts;
+    getUserLike: (commentId: number) => CommentLike | null;
+    handleCommentLike: (commentId: number, value: 'like' | 'dislike') => Promise<void>;
 }) {
     const indentLevel = Math.min(depth * 6, 24);
     const indentStyle = depth > 0 ? { marginLeft: `${indentLevel * 4}px` } : {};
@@ -54,6 +60,8 @@ function CommentItem({
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const isDeleted = comment.content === 'Comentario Eliminado';
+    const likeCounts = getLikeCounts(comment.id);
+    const userLike = getUserLike(comment.id);
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleString('es-ES', {
@@ -133,13 +141,35 @@ function CommentItem({
                         <p className={`text-sm whitespace-pre-wrap leading-relaxed ${isDeleted ? 'italic text-gray-500' : 'text-gray-700'}`}>{comment.content}</p>
                     </div>
 
-                    <div className="flex items-center gap-4 mt-2 pl-2">
-                        <button 
+                    <div className="flex items-center justify-between gap-4 mt-2 pl-2">
+                        <button
                             className="text-xs font-medium text-gray-500 hover:text-[#c1835a] transition-colors"
                             onClick={() => setReplyingTo(comment.id)}
                         >
                             Responder
                         </button>
+                        {!isDeleted && (
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs transition ${userLike?.value === true ? 'bg-[#656b48]/15 text-[#656b48]' : 'text-gray-400 hover:bg-gray-100 hover:text-[#656b48]'}`}
+                                    onClick={() => handleCommentLike(comment.id, 'like')}
+                                    aria-label="Me gusta"
+                                >
+                                    <ThumbsUp className="h-3.5 w-3.5" />
+                                    <span>{likeCounts.likes}</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs transition ${userLike?.value === false ? 'bg-red-50 text-red-600' : 'text-gray-400 hover:bg-gray-100 hover:text-red-500'}`}
+                                    onClick={() => handleCommentLike(comment.id, 'dislike')}
+                                    aria-label="No me gusta"
+                                >
+                                    <ThumbsDown className="h-3.5 w-3.5" />
+                                    <span>{likeCounts.dislikes}</span>
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -178,6 +208,9 @@ function CommentItem({
                             setReplyContent={setReplyContent}
                             handleReplySubmit={handleReplySubmit}
                             handleDeleteComment={handleDeleteComment}
+                            getLikeCounts={getLikeCounts}
+                            getUserLike={getUserLike}
+                            handleCommentLike={handleCommentLike}
                             currentUserId={currentUserId}
                             depth={depth + 1}
                             projectOwnerId={projectOwnerId}
@@ -203,6 +236,9 @@ export default function ProjectPage() {
     const [userRating, setUserRating] = useState<Rating | null>(null);
     const [comments, setComments] = useState<CommentWithUser[]>([]);
     const [commentsLoading, setCommentsLoading] = useState(true);
+    const [commentLikeCounts, setCommentLikeCounts] = useState<Record<number, CommentLikeCounts>>({});
+    const [userCommentLikes, setUserCommentLikes] = useState<Record<number, CommentLike | null>>({});
+    const [likingCommentId, setLikingCommentId] = useState<number | null>(null);
     const [newComment, setNewComment] = useState('');
     const [replyingTo, setReplyingTo] = useState<number | null>(null);
     const [replyContent, setReplyContent] = useState('');
@@ -264,6 +300,71 @@ export default function ProjectPage() {
         };
         
         return Promise.all(topLevelComments.map(comment => buildTree(comment)));
+    };
+
+    const flattenComments = (items: CommentWithUser[]): CommentWithUser[] =>
+        items.flatMap(comment => [comment, ...(comment.replies ? flattenComments(comment.replies) : [])]);
+
+    useEffect(() => {
+        if (comments.length === 0) {
+            setCommentLikeCounts({});
+            setUserCommentLikes({});
+            return;
+        }
+
+        const loadCommentLikes = async () => {
+            try {
+                const allComments = flattenComments(comments);
+                const results = await Promise.all(allComments.map(async comment => {
+                    const [counts, userLike] = await Promise.all([
+                        getCommentLikes(comment.id),
+                        appUser ? getUserCommentLike(comment.id, appUser.id) : Promise.resolve(null),
+                    ]);
+                    return { id: comment.id, counts, userLike };
+                }));
+
+                setCommentLikeCounts(Object.fromEntries(results.map(result => [result.id, result.counts])));
+                setUserCommentLikes(Object.fromEntries(results.map(result => [result.id, result.userLike])));
+            } catch (error) {
+                console.error('Error cargando valoraciones de comentarios:', error);
+            }
+        };
+
+        loadCommentLikes();
+    }, [comments, appUser]);
+
+    const handleCommentLike = async (commentId: number, value: 'like' | 'dislike') => {
+        if (!appUser) {
+            alert('Debes iniciar sesión para valorar un comentario.');
+            return;
+        }
+
+        if (likingCommentId === commentId) return;
+        setLikingCommentId(commentId);
+
+        try {
+            const existingLike = userCommentLikes[commentId] || null;
+            const nextValue = value === 'like';
+            if (!existingLike) {
+                await createCommentLike(commentId, appUser.id, value);
+            } else if (existingLike.value === nextValue) {
+                await deleteCommentLike(existingLike.id);
+            } else {
+                await updateCommentLike(existingLike.id, value);
+            }
+
+            const [counts, userLike] = await Promise.all([
+                getCommentLikes(commentId),
+                getUserCommentLike(commentId, appUser.id),
+            ]);
+            setCommentLikeCounts(previous => ({ ...previous, [commentId]: counts }));
+            setUserCommentLikes(previous => ({ ...previous, [commentId]: userLike }));
+        } catch (error) {
+            console.error('Error actualizando valoración del comentario:', error);
+            alert('No se pudo actualizar tu valoración. Inténtalo nuevamente.');
+        } finally {
+            setLikingCommentId(null);
+        }
     };
 
     const handleCommentSubmit = async () => {
@@ -707,6 +808,9 @@ export default function ProjectPage() {
                                         setReplyContent={setReplyContent}
                                         handleReplySubmit={handleReplySubmit}
                                         handleDeleteComment={handleDeleteComment}
+                                        getLikeCounts={(commentId) => commentLikeCounts[commentId] || { likes: 0, dislikes: 0 }}
+                                        getUserLike={(commentId) => userCommentLikes[commentId] || null}
+                                        handleCommentLike={handleCommentLike}
                                         currentUserId={appUser?.id ?? null}
                                         depth={0}
                                         projectOwnerId={project.owner}

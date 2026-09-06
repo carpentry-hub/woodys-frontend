@@ -22,3 +22,16 @@ export interface NewComment {
     project_id: number;
     parent_comment_id?: number | null;
 }
+
+export interface CommentLike {
+    id: number;
+    user_id: number;
+    comment_id: number;
+    value: boolean;
+    created_at: string;
+}
+
+export interface CommentLikeCounts {
+    likes: number;
+    dislikes: number;
+}
